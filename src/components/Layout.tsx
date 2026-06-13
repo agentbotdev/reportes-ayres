@@ -1,21 +1,29 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, TrendingUp, Share2, Activity, Bug, UserCheck, ScrollText,
+  LayoutDashboard, Clock, TrendingUp, Share2, MessagesSquare, Activity, Bug, UserCheck, ScrollText,
   ChevronDown, Calendar, Menu, X, type LucideIcon,
 } from 'lucide-react';
-import type { DayReport } from '../types';
 
 export interface NavItem { id: string; label: string; icon: LucideIcon; }
 export const NAV: NavItem[] = [
   { id: 'resumen', label: 'Resumen', icon: LayoutDashboard },
+  { id: 'actividad', label: 'Actividad', icon: Clock },
   { id: 'embudo', label: 'Embudo', icon: TrendingUp },
   { id: 'derivaciones', label: 'Derivaciones', icon: Share2 },
+  { id: 'conversaciones', label: 'Conversaciones', icon: MessagesSquare },
   { id: 'calidad', label: 'Calidad del bot', icon: Activity },
   { id: 'errores', label: 'Errores & Fixes', icon: Bug },
   { id: 'acciones', label: 'Acción humana', icon: UserCheck },
   { id: 'bitacora', label: 'Bitácora', icon: ScrollText },
 ];
+
+const MESES = ['', 'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+export const scopeLabel = (s: string) => {
+  if (s === 'todo') return 'Todo el período';
+  const [, m, d] = s.split('-');
+  return `${parseInt(d)} ${MESES[parseInt(m)]}`;
+};
 
 function Logo() {
   return (
@@ -35,19 +43,13 @@ function Logo() {
   );
 }
 
-function DaySelector({ reports, active, onPick }: { reports: DayReport[]; active: DayReport; onPick: (d: DayReport) => void }) {
+function ScopeSelector({ scopes, active, onPick }: { scopes: string[]; active: string; onPick: (s: string) => void }) {
   const [open, setOpen] = useState(false);
-  const fmt = (f: string) => {
-    const [, m, d] = f.split('-');
-    const meses = ['', 'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-    return `${d} ${meses[parseInt(m)]}`;
-  };
   return (
     <div className="relative">
       <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 px-3.5 py-2 rounded-2xl glass hover:bg-white text-sm font-bold text-ink transition active:scale-95">
         <Calendar size={15} className="text-brand" />
-        <span>{fmt(active.fecha)}</span>
-        <span className="text-slatey font-medium hidden sm:inline">· {active.titulo}</span>
+        <span>{scopeLabel(active)}</span>
         <ChevronDown size={14} className={`text-slatey transition ${open ? 'rotate-180' : ''}`} />
       </button>
       <AnimatePresence>
@@ -55,14 +57,11 @@ function DaySelector({ reports, active, onPick }: { reports: DayReport[]; active
           <>
             <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-              className="absolute right-0 mt-2 w-60 glass rounded-2xl p-1.5 z-40 shadow-xl">
-              {reports.map(r => (
-                <button key={r.fecha} onClick={() => { onPick(r); setOpen(false); }}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition ${r.fecha === active.fecha ? 'bg-brand text-white font-bold' : 'hover:bg-white/80 text-ink font-semibold'}`}>
-                  <div className="flex items-center justify-between">
-                    <span>{fmt(r.fecha)}</span>
-                    <span className={`text-[10px] ${r.fecha === active.fecha ? 'text-white/80' : 'text-slatey'}`}>{r.titulo}</span>
-                  </div>
+              className="absolute right-0 mt-2 w-52 glass rounded-2xl p-1.5 z-40 shadow-xl">
+              {['todo', ...scopes].map(s => (
+                <button key={s} onClick={() => { onPick(s); setOpen(false); }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition ${s === active ? 'bg-brand text-white font-bold' : 'hover:bg-white/80 text-ink font-semibold'}`}>
+                  {scopeLabel(s)}
                 </button>
               ))}
             </motion.div>
@@ -74,9 +73,9 @@ function DaySelector({ reports, active, onPick }: { reports: DayReport[]; active
 }
 
 export default function Layout({
-  reports, active, onPickDay, section, onSection, children,
+  scopes, scope, onScope, section, onSection, children,
 }: {
-  reports: DayReport[]; active: DayReport; onPickDay: (d: DayReport) => void;
+  scopes: string[]; scope: string; onScope: (s: string) => void;
   section: string; onSection: (s: string) => void; children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -85,7 +84,7 @@ export default function Layout({
   const SideContent = () => (
     <>
       <div className="px-5 pt-6 pb-5"><Logo /></div>
-      <nav className="px-3 flex-1">
+      <nav className="px-3 flex-1 overflow-y-auto no-scrollbar">
         {NAV.map(item => {
           const A = item.icon;
           const isActive = item.id === section;
@@ -105,7 +104,7 @@ export default function Layout({
             <span className="w-2 h-2 rounded-full bg-ok animate-pulse-dot" />
             <span className="text-[11px] font-bold text-ink">Bot en producción</span>
           </div>
-          <p className="text-[10px] text-slatey mt-1 font-medium leading-relaxed">Hotel Ayres del Champaquí · WhatsApp · n8n + gpt-5.4-mini</p>
+          <p className="text-[10px] text-slatey mt-1 font-medium leading-relaxed">Hotel Ayres del Champaquí · WhatsApp</p>
         </div>
       </div>
     </>
@@ -113,12 +112,10 @@ export default function Layout({
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Sidebar desktop */}
       <aside className="hidden lg:flex w-64 shrink-0 flex-col glass border-r border-slate-200/60">
         <SideContent />
       </aside>
 
-      {/* Sidebar mobile */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -134,7 +131,6 @@ export default function Layout({
         )}
       </AnimatePresence>
 
-      {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 shrink-0 flex items-center justify-between px-4 sm:px-7 glass border-b border-slate-200/60">
           <div className="flex items-center gap-3">
@@ -144,7 +140,7 @@ export default function Layout({
               <h1 className="text-base font-extrabold text-ink tracking-tight">{current.label}</h1>
             </div>
           </div>
-          <DaySelector reports={reports} active={active} onPick={onPickDay} />
+          <ScopeSelector scopes={scopes} active={scope} onPick={onScope} />
         </header>
         <main className="flex-1 overflow-y-auto px-4 sm:px-7 py-6 no-scrollbar">
           <div className="max-w-6xl mx-auto pb-12">{children}</div>
