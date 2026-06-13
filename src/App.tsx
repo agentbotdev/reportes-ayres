@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import Layout from './components/Layout';
+import PrintReport from './components/PrintReport';
 import { SECTIONS } from './sections';
 import { filterScope, scopeDays } from './lib/metrics';
 import { getNarrative } from './data/narrative';
@@ -13,10 +14,15 @@ export default function App() {
   const Section = SECTIONS[section];
 
   return (
-    <Layout scopes={days} scope={scope} onScope={setScope} section={section} onSection={setSection}>
-      <div key={section + scope} className="animate-fade-in">
-        <Section cs={cs} nar={nar} scope={scope} />
+    <>
+      <div className="app-shell">
+        <Layout scopes={days} scope={scope} onScope={setScope} section={section} onSection={setSection} onPrint={() => window.print()}>
+          <div key={section + scope} className="animate-fade-in">
+            <Section cs={cs} nar={nar} scope={scope} />
+          </div>
+        </Layout>
       </div>
-    </Layout>
+      <PrintReport cs={cs} nar={nar} scope={scope} />
+    </>
   );
 }

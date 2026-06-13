@@ -58,3 +58,38 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* ====== IMPRESIÓN / PDF ====== */
+.print-doc { display: none; }
+
+@media print {
+  @page { size: A4; margin: 14mm 12mm; }
+  body { background: #fff !important; }
+  .app-shell { display: none !important; }
+  .print-doc { display: block !important; color: #0F172A; font-size: 11px; line-height: 1.45; }
+  .print-doc h1 { font-size: 20px; font-weight: 800; margin: 0; }
+  .print-doc h2 { font-size: 13px; font-weight: 800; margin: 14px 0 6px; padding-bottom: 3px; border-bottom: 2px solid #6366F1; color: #4F46E5; }
+  .pr-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0F172A; padding-bottom: 8px; }
+  .pr-sub { font-size: 10px; color: #64748B; margin: 3px 0 0; }
+  .pr-brand { font-size: 13px; font-weight: 900; color: #6366F1; }
+  .pr-resumen { font-size: 11px; color: #334155; margin: 10px 0; }
+  .pr-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pr-kpis > div { border: 1px solid #E2E8F0; border-radius: 8px; padding: 7px 9px; }
+  .pr-kpis b { font-size: 17px; font-weight: 800; display: block; }
+  .pr-kpis span { font-size: 9px; color: #64748B; }
+  .pr-table { width: 100%; border-collapse: collapse; }
+  .pr-table th { text-align: left; font-size: 9px; text-transform: uppercase; color: #94A3B8; padding: 3px 6px; }
+  .pr-table td { padding: 3px 6px; border-bottom: 1px solid #F1F5F9; font-size: 10.5px; }
+  .pr-num { font-weight: 800; width: 50px; }
+  .pr-barcell { width: 45%; }
+  .pr-bar { display: inline-block; height: 7px; background: #6366F1; border-radius: 4px; }
+  .pr-mini { font-size: 10px; color: #64748B; margin-top: 5px; }
+  .pr-errs { margin: 0; padding-left: 16px; }
+  .pr-errs li { margin-bottom: 7px; }
+  .pr-tag { font-size: 8px; background: #ECFDF5; color: #16A34A; padding: 1px 6px; border-radius: 6px; font-weight: 700; }
+  .pr-err-body { font-size: 9.5px; color: #475569; margin-top: 2px; }
+  .pr-err-body i { color: #0F172A; font-style: normal; font-weight: 700; }
+  .pr-cal { margin: 0; padding-left: 16px; font-size: 10.5px; }
+  .pr-cal li { margin-bottom: 3px; }
+  .pr-foot { margin-top: 16px; padding-top: 6px; border-top: 1px solid #E2E8F0; font-size: 9px; color: #94A3B8; text-align: center; }
+}

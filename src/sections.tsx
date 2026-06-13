@@ -33,8 +33,8 @@ function Tip({ active, payload, label }: any) {
 
 const ChatLink = ({ id, children }: { id: number; children?: React.ReactNode }) => (
   <a href={convUrl(id)} target="_blank" rel="noreferrer"
-    className="inline-flex items-center gap-1 text-brand hover:text-brand-dark font-semibold transition group">
-    {children ?? <>conv {id}</>}
+    className="inline-flex items-center gap-1 text-brand hover:text-brand-dark font-semibold transition group whitespace-nowrap">
+    {children ?? <>Ver chat</>}
     <ExternalLink size={11} className="opacity-60 group-hover:opacity-100" />
   </a>
 );
@@ -74,7 +74,7 @@ export function Resumen({ cs, nar }: P) {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <Card className="p-5 lg:col-span-2">
-          <SectionHeader icon={TrendingUp} title="Embudo" desc="Cuántas llegaron al menos a cada etapa" />
+          <SectionHeader icon={TrendingUp} title="Embudo" desc="Cuántos clientes llegaron a cada paso" />
           <ResponsiveContainer width="100%" height={230}>
             <BarChart data={emb} margin={{ top: 18, right: 8, left: -22, bottom: 0 }}>
               <XAxis dataKey="label" tick={{ fontSize: 9.5, fill: C.slate, fontWeight: 600 }} interval={0} angle={-15} textAnchor="end" height={50} />
@@ -130,7 +130,7 @@ export function Actividad({ cs }: P) {
   const pico = tl.reduce((a, b) => (b.total > (a?.total || 0) ? b : a), tl[0]);
   return (
     <div className="space-y-6">
-      <SectionHeader icon={Clock} title="Actividad en el tiempo" desc="Conversaciones nuevas por hora (Argentina)" />
+      <SectionHeader icon={Clock} title="Actividad en el tiempo" desc="Cuántos escribieron en cada hora del día" />
       <Card className="p-5">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[13px] font-bold text-ink">Flujo por hora</div>
@@ -181,7 +181,7 @@ export function Embudo({ cs }: P) {
   const max = Math.max(...emb.map(e => e.valor), 1);
   return (
     <div className="space-y-6">
-      <SectionHeader icon={TrendingUp} title="Embudo de conversión" desc="De cada etapa a la siguiente" />
+      <SectionHeader icon={TrendingUp} title="Embudo de conversión" desc="Cuántos clientes avanzan en cada paso de la venta" />
       <Card className="p-6">
         <div className="space-y-5">
           {emb.map((e, i) => {
@@ -215,7 +215,7 @@ export function Derivaciones({ cs }: P) {
   const [open, setOpen] = useState<string | null>(der[0]?.razon ?? null);
   return (
     <div className="space-y-6">
-      <SectionHeader icon={Share2} title="Derivaciones al equipo" desc={`${total} en total · tocá una para ver las conversaciones`} />
+      <SectionHeader icon={Share2} title="Derivaciones al equipo" desc={`${total} en total · tocá cada motivo para ver los clientes`} />
       <div className="grid lg:grid-cols-2 gap-6">
         <Card className="p-5 self-start">
           <ResponsiveContainer width="100%" height={240}>
@@ -300,7 +300,7 @@ export function Conversaciones({ cs }: P) {
   ] as const;
   return (
     <div className="space-y-5">
-      <SectionHeader icon={MessagesSquare} title="Conversaciones" desc={`${rows.length} resultado${rows.length === 1 ? '' : 's'} · click para abrir en Chatwoot`} />
+      <SectionHeader icon={MessagesSquare} title="Conversaciones" desc={`${rows.length} resultado${rows.length === 1 ? '' : 's'} · tocá Ver chat para leer la conversación`} />
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slatey" />
@@ -341,7 +341,7 @@ export function Conversaciones({ cs }: P) {
                     {c.derivado ? <Badge tone="warn">Derivada</Badge> : c.manual ? <Badge tone="info">A mano</Badge> : <Badge tone="ok">Bot</Badge>}
                   </td>
                   <td className="px-3 py-3 hidden sm:table-cell"><span className="text-[11px] text-slatey font-mono">{arTime(c.ultimaAct)}</span></td>
-                  <td className="px-4 py-3 text-right"><ChatLink id={c.id}><span className="text-[11.5px]">abrir</span></ChatLink></td>
+                  <td className="px-4 py-3 text-right"><ChatLink id={c.id}><span className="text-[11.5px]">Ver chat</span></ChatLink></td>
                 </motion.tr>
               ))}
               {rows.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-sm text-slatey font-medium">Sin resultados para "{q}"</td></tr>}
@@ -358,7 +358,7 @@ export function Calidad({ nar }: P) {
   const ic = { ok: CheckCircle2, warn: AlertTriangle, bad: XCircle };
   return (
     <div className="space-y-6">
-      <SectionHeader icon={Activity} title="Calidad del bot" desc="Qué tan bien responde, medido sobre las conversaciones reales" />
+      <SectionHeader icon={Activity} title="Calidad del bot" desc="Qué tan bien está respondiendo el bot" />
       <div className="grid sm:grid-cols-2 gap-4">
         {nar.calidad.map((m, i) => {
           const I = ic[m.tone];
@@ -442,7 +442,7 @@ export function Acciones({ nar }: P) {
   const pri: Record<string, string> = { alta: 'bad', media: 'warn', baja: 'info' };
   return (
     <div className="space-y-6">
-      <SectionHeader icon={UserCheck} title="Leads para retomar" desc="Seguimiento del equipo · click para abrir en Chatwoot" />
+      <SectionHeader icon={UserCheck} title="Leads para retomar" desc="Tocá Ver chat para leer la conversación completa" />
       <div className="space-y-3">
         {nar.acciones.map((a, i) => (
           <Card key={i} delay={i * 0.05} className="p-4">
@@ -471,7 +471,7 @@ export function Bitacora({ nar }: P) {
   const rg: Record<string, string> = { alto: 'bad', medio: 'warn', bajo: 'info' };
   return (
     <div className="space-y-6">
-      <SectionHeader icon={ScrollText} title="Bitácora" desc="Qué se tocó, qué hay que vigilar y qué puede romperse" />
+      <SectionHeader icon={ScrollText} title="Bitácora" desc="Qué se hizo y qué hay que mirar" />
       <div className="grid lg:grid-cols-2 gap-6">
         <Card className="p-5">
           <h3 className="text-[13px] font-extrabold text-ink mb-4">Línea de tiempo</h3>

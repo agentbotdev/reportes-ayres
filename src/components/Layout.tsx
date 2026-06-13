@@ -2,20 +2,20 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Clock, TrendingUp, Share2, MessagesSquare, Activity, Bug, UserCheck, ScrollText,
-  ChevronDown, Calendar, Menu, X, type LucideIcon,
+  ChevronDown, Calendar, Menu, X, Download, type LucideIcon,
 } from 'lucide-react';
 
 export interface NavItem { id: string; label: string; icon: LucideIcon; }
 export const NAV: NavItem[] = [
   { id: 'resumen', label: 'Resumen', icon: LayoutDashboard },
-  { id: 'actividad', label: 'Actividad', icon: Clock },
-  { id: 'embudo', label: 'Embudo', icon: TrendingUp },
-  { id: 'derivaciones', label: 'Derivaciones', icon: Share2 },
-  { id: 'conversaciones', label: 'Conversaciones', icon: MessagesSquare },
+  { id: 'actividad', label: 'Por hora', icon: Clock },
+  { id: 'embudo', label: 'Embudo de ventas', icon: TrendingUp },
+  { id: 'derivaciones', label: 'Pasadas al equipo', icon: Share2 },
+  { id: 'conversaciones', label: 'Todos los chats', icon: MessagesSquare },
   { id: 'calidad', label: 'Calidad del bot', icon: Activity },
-  { id: 'errores', label: 'Errores & Fixes', icon: Bug },
-  { id: 'acciones', label: 'Acción humana', icon: UserCheck },
-  { id: 'bitacora', label: 'Bitácora', icon: ScrollText },
+  { id: 'errores', label: 'Errores y arreglos', icon: Bug },
+  { id: 'acciones', label: 'Para llamar', icon: UserCheck },
+  { id: 'bitacora', label: 'Qué hicimos', icon: ScrollText },
 ];
 
 const MESES = ['', 'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -73,10 +73,10 @@ function ScopeSelector({ scopes, active, onPick }: { scopes: string[]; active: s
 }
 
 export default function Layout({
-  scopes, scope, onScope, section, onSection, children,
+  scopes, scope, onScope, section, onSection, children, onPrint,
 }: {
   scopes: string[]; scope: string; onScope: (s: string) => void;
-  section: string; onSection: (s: string) => void; children: React.ReactNode;
+  section: string; onSection: (s: string) => void; children: React.ReactNode; onPrint: () => void;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const current = NAV.find(n => n.id === section)!;
@@ -140,7 +140,13 @@ export default function Layout({
               <h1 className="text-base font-extrabold text-ink tracking-tight">{current.label}</h1>
             </div>
           </div>
-          <ScopeSelector scopes={scopes} active={scope} onPick={onScope} />
+          <div className="flex items-center gap-2">
+            <button onClick={onPrint} title="Descargar este reporte en PDF"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-2xl brand-gradient text-white text-sm font-bold transition active:scale-95 shadow-lg shadow-brand/20 hover:shadow-brand/30">
+              <Download size={15} /><span className="hidden sm:inline">Descargar PDF</span>
+            </button>
+            <ScopeSelector scopes={scopes} active={scope} onPick={onScope} />
+          </div>
         </header>
         <main className="flex-1 overflow-y-auto px-4 sm:px-7 py-6 no-scrollbar">
           <div className="max-w-6xl mx-auto pb-12">{children}</div>
