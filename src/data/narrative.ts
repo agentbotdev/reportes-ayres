@@ -38,7 +38,7 @@ export const EVOLUCION_HITOS: Hito[] = [
 ];
 
 // ── Sello temporal del reporte (cuándo se hizo este análisis) ──
-export const REPORTE_SELLO = { inicio: '13/06 22:00', generado: '14/06 07:00', tz: 'ART' };
+export const REPORTE_SELLO = { inicio: '13/06 22:00', generado: '14/06 08:31', tz: 'ART' };
 
 // ── Errores del período (reutilizables entre scopes) ──
 const E_NL: ErrorItem = {
