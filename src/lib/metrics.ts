@@ -109,4 +109,36 @@ export function temperaturas(cs: Conv[]) {
   return order.filter(t => m[t]).map(t => ({ t, label: lbl[t], valor: m[t] }));
 }
 
+const MESES_AR = ['', 'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+export const diaLabel = (key: string) => {
+  const [, m, d] = key.split('-');
+  return `${parseInt(d)} ${MESES_AR[parseInt(m)]}`;
+};
+
+export interface DiaEvol {
+  dia: string; label: string; total: number; cotizadas: number; datos: number;
+  derivadas: number; manual: number; msgs: number; cotPct: number;
+}
+
+// Evolución día por día del período completo (toda la vida del bot, unida).
+export function evolucionDias(cs: Conv[]): DiaEvol[] {
+  const COT = ['cotizacion_enviada', 'datos_para_reserva', 'cierre', 'reserva_confirmada'];
+  const DAT = ['datos_para_reserva', 'cierre', 'reserva_confirmada'];
+  const map: Record<string, DiaEvol> = {};
+  cs.filter(c => c.creada >= LAUNCH).forEach(c => {
+    const k = arDayKey(c.creada);
+    map[k] ||= { dia: k, label: diaLabel(k), total: 0, cotizadas: 0, datos: 0, derivadas: 0, manual: 0, msgs: 0, cotPct: 0 };
+    const r = map[k];
+    r.total++;
+    if (COT.includes(c.etapa)) r.cotizadas++;
+    if (DAT.includes(c.etapa)) r.datos++;
+    if (c.derivado) r.derivadas++;
+    if (c.manual) r.manual++;
+    r.msgs += c.msgsCliente + c.msgsBot;
+  });
+  return Object.values(map)
+    .map(r => ({ ...r, cotPct: r.total ? Math.round((r.cotizadas / r.total) * 100) : 0 }))
+    .sort((a, b) => a.dia.localeCompare(b.dia));
+}
+
 export { ETAPA_LABEL };

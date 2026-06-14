@@ -1,6 +1,8 @@
 import type { Conv } from '../data/conversations';
+import { conversations } from '../data/conversations';
 import type { Narrative } from '../data/narrative';
-import { kpis, embudo, derivaciones, habitaciones } from '../lib/metrics';
+import { EVOLUCION_HITOS } from '../data/narrative';
+import { kpis, embudo, derivaciones, habitaciones, evolucionDias } from '../lib/metrics';
 import { scopeLabel } from './Layout';
 
 // Documento de impresión: se renderiza limpio para "Guardar como PDF".
@@ -10,7 +12,9 @@ export default function PrintReport({ cs, nar, scope }: { cs: Conv[]; nar: Narra
   const emb = embudo(cs);
   const der = derivaciones(cs);
   const hab = habitaciones(cs);
+  const evol = evolucionDias(conversations); // siempre el período completo
   const fecha = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const estadoTxt: Record<string, string> = { resuelto: 'Resuelto', aplicado: 'Aplicado', pendiente: 'Pendiente', descartado: 'Descartado' };
 
   return (
     <div className="print-doc">
@@ -34,47 +38,83 @@ export default function PrintReport({ cs, nar, scope }: { cs: Conv[]; nar: Narra
         <div><b>0</b><span>Precios inventados</span></div>
       </div>
 
-      <h2>Embudo de conversión</h2>
-      <table className="pr-table">
-        <tbody>
-          {emb.map(e => (
-            <tr key={e.etapa}><td>{e.label}</td><td className="pr-num">{e.valor}</td>
-              <td className="pr-barcell"><span className="pr-bar" style={{ width: `${(e.valor / (emb[0].valor || 1)) * 100}%` }} /></td></tr>
+      {scope === 'todo' && evol.length > 1 && (
+        <div className="pr-block">
+          <h2>Evolución día a día</h2>
+          <table className="pr-table">
+            <thead><tr><th>Día</th><th>Conversaciones</th><th>Cotización</th><th>Datos reserva</th><th>Derivadas</th></tr></thead>
+            <tbody>
+              {evol.map(d => (
+                <tr key={d.dia}>
+                  <td><b>{d.label}</b></td><td className="pr-num">{d.total}</td>
+                  <td>{d.cotizadas} ({d.cotPct}%)</td><td className="pr-num">{d.datos}</td><td className="pr-num">{d.derivadas}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="pr-block">
+        <h2>Embudo de conversión</h2>
+        <table className="pr-table">
+          <tbody>
+            {emb.map(e => (
+              <tr key={e.etapa}><td>{e.label}</td><td className="pr-num">{e.valor}</td>
+                <td className="pr-barcell"><span className="pr-bar" style={{ width: `${(e.valor / (emb[0].valor || 1)) * 100}%` }} /></td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="pr-mini">Interés por habitación: Master Suite {hab.master} · Loft de Montaña {hab.loft}.</p>
+      </div>
+
+      <div className="pr-block">
+        <h2>Derivaciones al equipo ({k.derivadas})</h2>
+        <table className="pr-table">
+          <thead><tr><th>Motivo</th><th>Cantidad</th><th>Evaluación</th></tr></thead>
+          <tbody>
+            {der.map(d => (
+              <tr key={d.razon}><td>{d.label}</td><td className="pr-num">{d.cant}</td>
+                <td>{d.ok === 'si' ? 'Correcta' : d.ok === 'parcial' ? 'Mejorable' : 'Revisar'}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="pr-block">
+        <h2>Errores detectados y estado</h2>
+        <ol className="pr-errs">
+          {nar.errores.map(e => (
+            <li key={e.id}>
+              <b>{e.titulo}</b> <span className={`pr-tag pr-tag-${e.estado}`}>{estadoTxt[e.estado] || e.estado}</span> <span className="pr-mag">{e.magnitud}</span>
+              <div className="pr-err-body"><i>Qué pasó:</i> {e.causa} <br /><i>Solución:</i> {e.fix}{e.nota ? <><br /><i>Nota:</i> {e.nota}</> : null}</div>
+            </li>
           ))}
-        </tbody>
-      </table>
-      <p className="pr-mini">Interés por habitación: Master Suite {hab.master} · Loft de Montaña {hab.loft}.</p>
+        </ol>
+      </div>
 
-      <h2>Derivaciones al equipo ({k.derivadas})</h2>
-      <table className="pr-table">
-        <thead><tr><th>Motivo</th><th>Cantidad</th><th>Evaluación</th></tr></thead>
-        <tbody>
-          {der.map(d => (
-            <tr key={d.razon}><td>{d.label}</td><td className="pr-num">{d.cant}</td>
-              <td>{d.ok === 'si' ? 'Correcta' : d.ok === 'parcial' ? 'Mejorable' : 'Revisar'}</td></tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="pr-block">
+        <h2>Calidad del bot</h2>
+        <ul className="pr-cal">
+          {nar.calidad.map((m, i) => <li key={i}><b>{m.value}</b> — {m.label}{m.meta ? ` (${m.meta})` : ''}{m.nota ? ` · ${m.nota}` : ''}</li>)}
+        </ul>
+      </div>
 
-      <h2>Errores detectados y soluciones</h2>
-      <ol className="pr-errs">
-        {nar.errores.map(e => (
-          <li key={e.id}>
-            <b>{e.titulo}</b> <span className="pr-tag">{e.estado}</span>
-            <div className="pr-err-body"><i>Qué pasó:</i> {e.causa} <br /><i>Solución:</i> {e.fix}</div>
-          </li>
-        ))}
-      </ol>
+      <div className="pr-block">
+        <h2>Acciones del equipo</h2>
+        <ul className="pr-cal">
+          {nar.acciones.map((a, i) => <li key={i}><b>{a.cliente}</b>{a.contacto ? ` (${a.contacto})` : ''} <span className={`pr-tag pr-pri-${a.prioridad}`}>{a.prioridad}</span> — {a.motivo} → {a.accion}</li>)}
+        </ul>
+      </div>
 
-      <h2>Calidad del bot</h2>
-      <ul className="pr-cal">
-        {nar.calidad.map((m, i) => <li key={i}><b>{m.value}</b> — {m.label}{m.nota ? ` (${m.nota})` : ''}</li>)}
-      </ul>
-
-      <h2>Acciones del equipo</h2>
-      <ul className="pr-cal">
-        {nar.acciones.map((a, i) => <li key={i}><b>{a.cliente}</b> ({a.prioridad}) — {a.motivo} → {a.accion}</li>)}
-      </ul>
+      {scope === 'todo' && (
+        <div className="pr-block">
+          <h2>Línea de tiempo del proyecto</h2>
+          <ul className="pr-cal pr-timeline">
+            {EVOLUCION_HITOS.map((h, i) => <li key={i}><b>{h.fecha}</b> · {h.titulo} — {h.detalle}</li>)}
+          </ul>
+        </div>
+      )}
 
       <footer className="pr-foot">Reporte generado por AgentBot · Bot Martina en producción · {fecha}</footer>
     </div>

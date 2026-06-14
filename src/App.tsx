@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import PrintReport from './components/PrintReport';
 import { SECTIONS } from './sections';
 import { filterScope, scopeDays } from './lib/metrics';
+import { downloadCsv } from './lib/exportData';
 import { getNarrative } from './data/narrative';
 
 export default function App() {
@@ -16,9 +17,9 @@ export default function App() {
   return (
     <>
       <div className="app-shell">
-        <Layout scopes={days} scope={scope} onScope={setScope} section={section} onSection={setSection} onPrint={() => window.print()}>
+        <Layout scopes={days} scope={scope} onScope={setScope} section={section} onSection={setSection} onPrint={() => window.print()} onExportCsv={() => downloadCsv(cs, scope)}>
           <div key={section + scope} className="animate-fade-in">
-            <Section cs={cs} nar={nar} scope={scope} />
+            <Section cs={cs} nar={nar} scope={scope} onScope={setScope} />
           </div>
         </Layout>
       </div>

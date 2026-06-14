@@ -1,23 +1,24 @@
 import { useState, useMemo } from 'react';
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, LabelList, CartesianGrid,
+  AreaChart, Area, BarChart, Bar, ComposedChart, Line, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, LabelList, CartesianGrid,
 } from 'recharts';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, Share2, Activity, Bug, UserCheck, ScrollText, Clock, MessagesSquare,
   CheckCircle2, AlertTriangle, XCircle, Wrench, Eye, Lightbulb, BedDouble, ExternalLink,
-  Search, ChevronRight, ArrowDownRight,
+  Search, ChevronRight, ArrowDownRight, Rocket, CalendarDays, GitCommit,
 } from 'lucide-react';
 import type { Conv } from './data/conversations';
-import { convUrl } from './data/conversations';
+import { convUrl, conversations } from './data/conversations';
 import type { Narrative } from './data/narrative';
+import { EVOLUCION_HITOS } from './data/narrative';
 import {
-  kpis, embudo, derivaciones, timeline, habitaciones, temperaturas, arTime, RAZON_LABEL,
+  kpis, embudo, derivaciones, timeline, habitaciones, temperaturas, arTime, RAZON_LABEL, evolucionDias,
 } from './lib/metrics';
 import { Card, Kpi, SectionHeader, Badge, Bar as PBar, sevTone, estadoTone } from './components/ui';
 
 const C = { brand: '#6366F1', soft: '#818CF8', ok: '#16A34A', warn: '#EAB308', bad: '#EF4444', info: '#3B82F6', ink: '#0F172A', slate: '#94A3B8' };
-type P = { cs: Conv[]; nar: Narrative; scope: string };
+type P = { cs: Conv[]; nar: Narrative; scope: string; onScope?: (s: string) => void };
 
 function Tip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
@@ -115,6 +116,105 @@ export function Resumen({ cs, nar }: P) {
                 <div className="text-[11.5px] text-slatey font-medium mt-0.5 leading-relaxed">{f.evidencia}</div></div>
             </div>
           ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+/* ───────────── EVOLUCIÓN (todo el período unido, por día + hitos) ───────────── */
+const HITO_META: Record<string, { color: string; icon: any; label: string }> = {
+  deploy: { color: C.brand, icon: Rocket, label: 'Deploy' },
+  fix: { color: C.ok, icon: Wrench, label: 'Arreglo' },
+  analisis: { color: C.info, icon: Eye, label: 'Análisis' },
+  bug: { color: C.bad, icon: Bug, label: 'Detectado' },
+  decision: { color: C.warn, icon: GitCommit, label: 'Decisión' },
+};
+export function Evolucion({ onScope }: P) {
+  // Siempre sobre TODO el período (vista consolidada), sin importar el scope activo.
+  const evol = evolucionDias(conversations);
+  const k = kpis(conversations);
+  const totDias = evol.length;
+  const KPIS = [
+    { label: 'Conversaciones totales', value: k.total, sub: `en ${totDias} días de operación`, icon: 'chat', tone: 'brand' },
+    { label: 'Recibieron cotización', value: `${k.cotPct}%`, sub: `${k.cotizadas} en total`, icon: 'tag', tone: 'ok' },
+    { label: 'Dejaron datos', value: `${k.datosPct}%`, sub: `${k.datos} listos para reservar`, icon: 'flame', tone: 'ok' },
+    { label: 'Derivadas al equipo', value: `${k.derPct}%`, sub: `${k.derivadas} en total`, icon: 'share', tone: 'warn' },
+  ];
+  return (
+    <div className="space-y-6">
+      <SectionHeader icon={TrendingUp} title="Evolución del proyecto" desc="Toda la vida del bot, unida: cómo viene día a día desde el lanzamiento" />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {KPIS.map((kp, i) => <Kpi key={kp.label} {...kp} delay={i * 0.04} />)}
+      </div>
+
+      <Card className="p-5">
+        <SectionHeader icon={CalendarDays} title="Día a día" desc="Conversaciones, cotizaciones y derivaciones por jornada · línea: % que recibió cotización" />
+        <ResponsiveContainer width="100%" height={280}>
+          <ComposedChart data={evol} margin={{ top: 18, right: 8, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="evt" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={C.brand} /><stop offset="100%" stopColor={C.soft} stopOpacity={0.55} /></linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F7" vertical={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 11, fill: C.slate, fontWeight: 700 }} />
+            <YAxis yAxisId="l" tick={{ fontSize: 11, fill: C.slate }} allowDecimals={false} />
+            <YAxis yAxisId="r" orientation="right" tick={{ fontSize: 10, fill: C.ok }} domain={[0, 100]} unit="%" />
+            <Tooltip content={<Tip />} cursor={{ fill: 'rgba(99,102,241,0.06)' }} />
+            <Bar yAxisId="l" isAnimationActive={false} dataKey="total" name="Conversaciones" radius={[7, 7, 0, 0]} fill="url(#evt)" maxBarSize={54}>
+              <LabelList dataKey="total" position="top" style={{ fontSize: 11, fontWeight: 800, fill: C.ink }} />
+            </Bar>
+            <Bar yAxisId="l" isAnimationActive={false} dataKey="derivadas" name="Derivadas" radius={[7, 7, 0, 0]} fill={C.warn} maxBarSize={54} opacity={0.85} />
+            <Line yAxisId="r" isAnimationActive={false} type="monotone" dataKey="cotPct" name="% cotización" stroke={C.ok} strokeWidth={2.5} dot={{ r: 3.5, fill: C.ok }} />
+          </ComposedChart>
+        </ResponsiveContainer>
+        <div className="flex flex-wrap gap-4 mt-1 justify-center text-[11px]">
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: C.brand }} /><b className="text-ink">Conversaciones</b></span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: C.warn }} /><b className="text-ink">Derivadas</b></span>
+          <span className="flex items-center gap-1.5"><span className="w-4 h-[2.5px] rounded" style={{ background: C.ok }} /><b className="text-ink">% cotización</b></span>
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {evol.map((d, i) => (
+          <Card key={d.dia} delay={i * 0.05} className="p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer group" >
+            <button onClick={() => onScope?.(d.dia)} className="text-left w-full">
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] font-extrabold text-ink">{d.label}</span>
+                <span className="text-[10px] font-bold text-brand opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5">ver <ChevronRight size={11} /></span>
+              </div>
+              <div className="text-[26px] leading-none font-extrabold text-ink tabular-nums mt-2">{d.total}</div>
+              <div className="text-[10.5px] text-slatey font-medium">conversaciones</div>
+              <div className="flex gap-2 mt-2.5 flex-wrap">
+                <Badge tone="ok">{d.cotPct}% cotiz</Badge>
+                <Badge tone="warn">{d.derivadas} deriv</Badge>
+              </div>
+            </button>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="p-5">
+        <SectionHeader icon={ScrollText} title="Línea de tiempo" desc="Deploys, arreglos y hallazgos a lo largo del proyecto" />
+        <div className="relative pl-5">
+          <div className="absolute left-[5px] top-1 bottom-1 w-[2px] bg-slate-200" />
+          {EVOLUCION_HITOS.map((h, i) => {
+            const m = HITO_META[h.tipo];
+            const HI = m.icon;
+            return (
+              <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="relative mb-5 last:mb-0">
+                <span className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-white" style={{ background: m.color }} />
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[11px] font-mono font-bold text-ink">{h.fecha}</span>
+                  <span className="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${m.color}1a`, color: m.color }}>
+                    <HI size={11} />{m.label}
+                  </span>
+                  <span className="text-[13px] font-extrabold text-ink">{h.titulo}</span>
+                </div>
+                <p className="text-[12px] text-slatey font-medium mt-1 leading-relaxed max-w-3xl">{h.detalle}</p>
+              </motion.div>
+            );
+          })}
         </div>
       </Card>
     </div>
@@ -508,6 +608,6 @@ export function Bitacora({ nar }: P) {
 }
 
 export const SECTIONS: Record<string, (p: P) => JSX.Element> = {
-  resumen: Resumen, actividad: Actividad, embudo: Embudo, derivaciones: Derivaciones,
+  resumen: Resumen, evolucion: Evolucion, actividad: Actividad, embudo: Embudo, derivaciones: Derivaciones,
   conversaciones: Conversaciones, calidad: Calidad, errores: Errores, acciones: Acciones, bitacora: Bitacora,
 };

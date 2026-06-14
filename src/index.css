@@ -92,4 +92,14 @@ body {
   .pr-cal { margin: 0; padding-left: 16px; font-size: 10.5px; }
   .pr-cal li { margin-bottom: 3px; }
   .pr-foot { margin-top: 16px; padding-top: 6px; border-top: 1px solid #E2E8F0; font-size: 9px; color: #94A3B8; text-align: center; }
+  .pr-block { page-break-inside: avoid; }
+  .pr-mag { font-size: 9px; color: #6366F1; font-weight: 700; }
+  .pr-tag-pendiente { background: #FEF9C3; color: #A16207; }
+  .pr-tag-aplicado, .pr-tag-resuelto { background: #ECFDF5; color: #16A34A; }
+  .pr-tag-descartado { background: #EFF6FF; color: #2563EB; }
+  .pr-pri-alta { background: #FEE2E2; color: #DC2626; }
+  .pr-pri-media { background: #FEF9C3; color: #A16207; }
+  .pr-pri-baja { background: #EFF6FF; color: #2563EB; }
+  .pr-timeline li { margin-bottom: 4px; font-size: 10px; }
+  .pr-timeline b { color: #4F46E5; }
 }

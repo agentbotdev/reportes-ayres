@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Clock, TrendingUp, Share2, MessagesSquare, Activity, Bug, UserCheck, ScrollText,
-  ChevronDown, Calendar, Menu, X, Download, type LucideIcon,
+  ChevronDown, Calendar, Menu, X, Download, LineChart, Table2, type LucideIcon,
 } from 'lucide-react';
 
 export interface NavItem { id: string; label: string; icon: LucideIcon; }
 export const NAV: NavItem[] = [
   { id: 'resumen', label: 'Resumen', icon: LayoutDashboard },
+  { id: 'evolucion', label: 'Evolución', icon: LineChart },
   { id: 'actividad', label: 'Por hora', icon: Clock },
   { id: 'embudo', label: 'Embudo de ventas', icon: TrendingUp },
   { id: 'derivaciones', label: 'Pasadas al equipo', icon: Share2 },
@@ -73,10 +74,10 @@ function ScopeSelector({ scopes, active, onPick }: { scopes: string[]; active: s
 }
 
 export default function Layout({
-  scopes, scope, onScope, section, onSection, children, onPrint,
+  scopes, scope, onScope, section, onSection, children, onPrint, onExportCsv,
 }: {
   scopes: string[]; scope: string; onScope: (s: string) => void;
-  section: string; onSection: (s: string) => void; children: React.ReactNode; onPrint: () => void;
+  section: string; onSection: (s: string) => void; children: React.ReactNode; onPrint: () => void; onExportCsv: () => void;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const current = NAV.find(n => n.id === section)!;
@@ -141,6 +142,10 @@ export default function Layout({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={onExportCsv} title="Descargar las conversaciones en CSV (Excel)"
+              className="flex items-center gap-2 px-3 py-2 rounded-2xl glass hover:bg-white text-sm font-bold text-ink transition active:scale-95">
+              <Table2 size={15} className="text-brand" /><span className="hidden md:inline">CSV</span>
+            </button>
             <button onClick={onPrint} title="Descargar este reporte en PDF"
               className="flex items-center gap-2 px-3.5 py-2 rounded-2xl brand-gradient text-white text-sm font-bold transition active:scale-95 shadow-lg shadow-brand/20 hover:shadow-brand/30">
               <Download size={15} /><span className="hidden sm:inline">Descargar PDF</span>
