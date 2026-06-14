@@ -133,7 +133,7 @@ export default function Layout({
       </AnimatePresence>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 shrink-0 flex items-center justify-between px-4 sm:px-7 glass border-b border-slate-200/60">
+        <header className="h-16 shrink-0 flex items-center justify-between px-4 sm:px-7 glass border-b border-slate-200/60 relative z-50">
           <div className="flex items-center gap-3">
             <button onClick={() => setMobileOpen(true)} className="lg:hidden text-ink"><Menu size={22} /></button>
             <div className="flex items-center gap-2.5">

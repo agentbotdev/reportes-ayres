@@ -37,6 +37,9 @@ export const EVOLUCION_HITOS: Hito[] = [
   { dia: '2026-06-14', fecha: '14/06', tipo: 'bug', titulo: 'Bugs detectados (sin tocar todavía)', detalle: 'Mensajes repetidos por doble disparo del juntador, el bot que a veces asume fechas/personas, y un tono por momentos de formulario. Decisión: analizar todo primero, después aplicar un arreglo por vez.' },
 ];
 
+// ── Sello temporal del reporte (cuándo se hizo este análisis) ──
+export const REPORTE_SELLO = { inicio: '13/06 22:00', generado: '14/06 07:00', tz: 'ART' };
+
 // ── Errores del período (reutilizables entre scopes) ──
 const E_NL: ErrorItem = {
   id: 'E1', titulo: 'Saltos de línea visibles como texto', sev: 'media', estado: 'aplicado',

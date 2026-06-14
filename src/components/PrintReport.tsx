@@ -1,7 +1,7 @@
 import type { Conv } from '../data/conversations';
 import { conversations } from '../data/conversations';
 import type { Narrative } from '../data/narrative';
-import { EVOLUCION_HITOS } from '../data/narrative';
+import { EVOLUCION_HITOS, REPORTE_SELLO } from '../data/narrative';
 import { kpis, embudo, derivaciones, habitaciones, evolucionDias } from '../lib/metrics';
 import { scopeLabel } from './Layout';
 
@@ -21,7 +21,7 @@ export default function PrintReport({ cs, nar, scope }: { cs: Conv[]; nar: Narra
       <header className="pr-head">
         <div>
           <h1>Reporte Bot Martina</h1>
-          <p className="pr-sub">Hotel Ayres del Champaquí · {scopeLabel(scope)} · generado el {fecha}</p>
+          <p className="pr-sub">Hotel Ayres del Champaquí · {scopeLabel(scope)} · iniciado {REPORTE_SELLO.inicio}, generado {REPORTE_SELLO.generado} {REPORTE_SELLO.tz} · {fecha}</p>
         </div>
         <div className="pr-brand">AgentBot</div>
       </header>

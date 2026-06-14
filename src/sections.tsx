@@ -11,7 +11,7 @@ import {
 import type { Conv } from './data/conversations';
 import { convUrl, conversations } from './data/conversations';
 import type { Narrative } from './data/narrative';
-import { EVOLUCION_HITOS } from './data/narrative';
+import { EVOLUCION_HITOS, REPORTE_SELLO } from './data/narrative';
 import {
   kpis, embudo, derivaciones, timeline, habitaciones, temperaturas, arTime, RAZON_LABEL, evolucionDias,
 } from './lib/metrics';
@@ -59,6 +59,10 @@ export function Resumen({ cs, nar }: P) {
       <Card className="p-6 relative overflow-hidden">
         <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full brand-gradient opacity-[0.06] blur-2xl" />
         <h2 className="text-2xl font-extrabold text-ink-gradient tracking-tight mb-2">Cómo viene Martina</h2>
+        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slatey mb-3 bg-white/70 border border-slate-200/70 rounded-full px-3 py-1">
+          <Clock size={12.5} className="text-brand" />
+          Reporte iniciado {REPORTE_SELLO.inicio} · generado {REPORTE_SELLO.generado} {REPORTE_SELLO.tz}
+        </div>
         <p className="text-sm text-slatey leading-relaxed max-w-3xl font-medium">{nar.resumen}</p>
         <div className="mt-4 flex flex-wrap gap-2">
           {nar.destacados.map((d, i) => (
