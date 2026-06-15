@@ -33,9 +33,12 @@ export const EVOLUCION_HITOS: Hito[] = [
   { dia: '2026-06-12', fecha: '12/06', tipo: 'fix', titulo: '8 errores de contenido corregidos', detalle: 'Primer día completo. Se reportaron y arreglaron el mismo día errores de info (spa, horarios, mensajes citados). Se blindó el juntador de mensajes y se armó el cierre con derivación a recepción.' },
   { dia: '2026-06-13', fecha: '13/06', tipo: 'deploy', titulo: 'Divisor de mensajes a prueba de modelo', detalle: 'Se deployó el divisor que normaliza saltos de línea y descarta repeticiones (06:41 ART). Validado con 6 casos antes de tocar producción.' },
   { dia: '2026-06-13', fecha: '13/06', tipo: 'analisis', titulo: 'Análisis post-fix', detalle: 'Se confirmó que los arreglos del 12 aguantaron: cero recaídas de info equivocada.' },
-  { dia: '2026-06-14', fecha: '14/06', tipo: 'analisis', titulo: 'Análisis profundo del período (164 conversaciones)', detalle: 'Se revisó toda la operación con métricas duras + 1.345 ejecuciones internas. La infraestructura quedó en cero fallos y los fixes validados. Se detectaron temas de comportamiento (mensajes repetidos, asunción de datos, tono) para trabajar.' },
-  { dia: '2026-06-14', fecha: '14/06', tipo: 'bug', titulo: 'Bugs detectados (sin tocar todavía)', detalle: 'Mensajes repetidos por doble disparo del juntador, el bot que a veces asume fechas/personas, y un tono por momentos de formulario. Decisión: analizar todo primero, después aplicar un arreglo por vez.' },
+  { dia: '2026-06-14', fecha: '14/06', tipo: 'analisis', titulo: 'Informe de las primeras 72 horas (282 conversaciones)', detalle: 'Se revisó toda la operación con métricas duras + 6.044 ejecuciones internas + análisis cualitativo de 250 conversaciones. Infraestructura 99,97% de éxito, humanidad 6,48/10 con pico el 13/06. La mayoría de los bugs feos son del acumulador (plomería de orquestación), no del modelo.' },
+  { dia: '2026-06-14', fecha: '14/06', tipo: 'bug', titulo: 'Bugs detectados (sin tocar todavía)', detalle: 'Precios del Loft disparatados en julio (bug del cotizador), el bot se cuelga con imágenes, mensajes repetidos por el acumulador, asunción de fechas/personas y tono de formulario. Decisión: documentar todo primero, después un arreglo por vez.' },
 ];
+
+// ── Humanidad conversacional por día (análisis cualitativo, escala 1-10) ──
+export const HUMANIDAD_DIA: Record<string, number> = { '2026-06-11': 5.0, '2026-06-12': 5.94, '2026-06-13': 6.84, '2026-06-14': 6.35 };
 
 // ── Sello temporal del reporte (cuándo se hizo este análisis) ──
 export const REPORTE_SELLO = { inicio: '13/06 22:00', generado: '14/06 08:31', tz: 'ART' };
@@ -99,6 +102,70 @@ const E_ALT: ErrorItem = {
   fix: 'Mostrar esas alternativas en vez de derivar. Es decisión de Pao (su regla de "no sugerir fechas" era de cuando el bot las inventaba).',
 };
 
+// ── Errores nuevos del informe 72hs ──
+const E_COTIZADOR: ErrorItem = {
+  id: 'B10', titulo: '💰 Cotizador: precios del Loft disparatados en julio', sev: 'alta', estado: 'pendiente',
+  magnitud: 'Verificado en vivo (convs 4462, 4469)',
+  causa: 'El cotizador devuelve la tarifa del Loft ROTA para julio (vacaciones de invierno): el Loft del 11 al 13 de julio sale $1.276.000 POR NOCHE, cuando en junio sale $145.200 (~8 veces más) y 4,5 veces el Master de la misma estadía. El bot NO inventa nada: muestra el precio que le da el cotizador.',
+  fix: 'Revisar y corregir la tarifa del Loft de julio en el sistema del cotizador (lo administra el equipo). Afecta ventas AHORA: el cliente ve un precio absurdo y se va.',
+  nota: 'Es un problema de DATOS del cotizador, no del bot. Pero es la prioridad comercial: cada cotización de Loft en julio sale mal.',
+};
+const E_VISION: ErrorItem = {
+  id: 'B7', titulo: 'El bot se cuelga cuando le mandan una imagen', sev: 'alta', estado: 'pendiente',
+  magnitud: '1 conversación (4454, una clienta)',
+  causa: 'Una clienta mandó la foto de una promo y el lector de imágenes del sistema se rompió. El bot no respondió más y la clienta quedó sin atención.',
+  fix: 'Blindar el lector de imágenes para que no se caiga, y que ante una imagen que no puede leer el bot igual conteste ("recibí tu imagen, ¿en qué te ayudo?").',
+};
+const E_RESALUDO: ErrorItem = {
+  id: 'B8', titulo: 'Se vuelve a presentar si el cliente reescribe rápido', sev: 'media', estado: 'pendiente',
+  magnitud: '2 conversaciones (4453, 4526)',
+  causa: 'Si el cliente reescribe a los 2-3 minutos, el bot vuelve a mandar la presentación completa en vez de seguir con lo que el cliente ya dijo.',
+  fix: 'Reforzar que el saludo va una sola vez; si ya hubo intercambio, no presentarse de nuevo.',
+};
+// ── Errores RESUELTOS (historial, para el catálogo completo) ──
+const R_LEAK: ErrorItem = {
+  id: 'RC-4', titulo: 'Filtró una instrucción interna a una clienta', sev: 'critica', estado: 'resuelto',
+  magnitud: 'conv 4341 (Débora), 12/06', causa: 'El modelo copió textual su guía interna del cotizador ("COTIZÁ ASÍ:...") y se la mostró al cliente.',
+  fix: 'Triple barrera de seguridad: regla en el prompt + prefijo de instrucción interna en el cotizador + filtro determinístico en el divisor. CERO leaks en el resto del período.',
+};
+const R_SPA: ErrorItem = {
+  id: 'RC-2', titulo: 'Decía que el spa / circuito hídrico se paga aparte', sev: 'critica', estado: 'resuelto',
+  magnitud: 'Pablo, Jorge · 12/06', causa: 'El error estaba escrito en el prompt.',
+  fix: 'Base de conocimiento reescrita: circuito hídrico, saunas, gym y SUM están incluidos; masajes, flotación y media pensión se pagan aparte.',
+};
+const R_QUOTES: ErrorItem = {
+  id: 'RC-1', titulo: 'No leía los mensajes citados (replies)', sev: 'critica', estado: 'resuelto',
+  magnitud: 'Pablo, Nerea · 12/06', causa: 'El juntador descartaba el dato del mensaje citado que manda WhatsApp.',
+  fix: 'Ahora resuelve la cita y la antepone al mensaje, así el bot responde sobre el tema correcto.',
+};
+const R_CHECKOUT: ErrorItem = {
+  id: 'RC-3', titulo: 'Informaba check-out a las 11 (es 10)', sev: 'alta', estado: 'resuelto',
+  magnitud: 'Nerea · 12/06', causa: 'El prompt no tenía los horarios y el modelo los inventó.',
+  fix: 'Se cargaron los datos operativos reales (check-in 15, check-out 10) + regla anti-invención.',
+};
+const R_REP: ErrorItem = {
+  id: 'E2', titulo: 'Pregunta repetida dos veces seguidas', sev: 'alta', estado: 'aplicado',
+  magnitud: '4 de 100 conversaciones · 13/06', causa: 'El modelo repetía el mismo texto pegado.',
+  fix: 'El divisor descarta líneas y mensajes idénticos consecutivos (Code1 v2). Cayó fuerte post-deploy.',
+};
+
+// ── Casos emblemáticos del informe 72hs (análisis cualitativo de 250 convs) ──
+export interface Caso { conv: number; dia: string; tipo: 'mejor' | 'peor'; titulo: string; cita: string; detalle: string; }
+export const CASOS_72: Caso[] = [
+  { conv: 4505, dia: '14/06', tipo: 'mejor', titulo: 'La mejor del período (9,5/10)', cita: 'Buenísimo, vamos con Loft de Montaña.', detalle: 'Resolvió una fecha vaga sin asumir, mandó fotos, cotizó, y al retomar 3hs después NO se re-presentó: confirmó la elección y cerró con seña sin filtrar datos bancarios. Cierre completo, natural y sin un bug.' },
+  { conv: 4542, dia: '14/06', tipo: 'mejor', titulo: 'Regla de edades impecable', cita: 'Desde los 13 años ya se considera adulto en el hotel. Entonces serían 3 adultos y 1 niño de 10, ¿confirmo así?', detalle: 'No asume: reclasifica con criterio y pide confirmación antes de cotizar.' },
+  { conv: 4394, dia: '13/06', tipo: 'mejor', titulo: 'Reconoce su error con naturalidad', cita: 'Sí, tal cual, tenés razón 🙌', detalle: 'El cliente lo corrige ("el 26 es viernes") y Martina recalcula y re-cotiza sin fricción.' },
+  { conv: 4491, dia: '14/06', tipo: 'mejor', titulo: 'Calidez pura', cita: 'Sí, obvio, no molesta para nada 😊', detalle: 'La clienta se disculpa por preguntar mucho y el bot la contiene, cotiza media pensión y deriva natural.' },
+  { conv: 3528, dia: '12/06', tipo: 'mejor', titulo: 'Cierre ejemplar', cita: 'Para reservar se abona una seña del 50% del total.', detalle: 'Explica pago y seña sin filtrar un dato bancario, pide los 9 datos y deriva limpio.' },
+  { conv: 4420, dia: '13/06', tipo: 'mejor', titulo: 'No inventa: deriva', cita: 'Tienen pileta climatizada y circuito hídrico, ambos incluidos en la estadía.', detalle: 'Contesta todas las preguntas encadenadas y cuando no sabe algo (juegos para niños) deriva en vez de inventar.' },
+  { conv: 4469, dia: '14/06', tipo: 'peor', titulo: 'La peor (2,5/10)', cita: 'Queda como 1 adulto y 2 niños, uno de 15 y uno de 5...', detalle: 'Descontrol total: alucinó la composición (edades que nadie dijo), inventó fechas, y mostró un Loft a $3.759.360. Los tres bugs juntos.' },
+  { conv: 4341, dia: '12/06', tipo: 'peor', titulo: 'El leak crítico (ya resuelto)', cita: 'COTIZÁ ASÍ: Master Suite a $240.000...', detalle: 'Filtró su instrucción interna al cliente en crudo. Fixeado el mismo día con triple barrera.' },
+  { conv: 4387, dia: '13/06', tipo: 'peor', titulo: 'Eco total', cita: '(copió palabra por palabra el mensaje del cliente)', detalle: 'La única respuesta del bot fue repetir el mensaje del cliente. Lead de voucher de regalo perdido.' },
+  { conv: 4389, dia: '13/06', tipo: 'peor', titulo: 'Loop sin salida', cita: 'Mirando las fechas que me pasaste, no tengo disponibilidad...', detalle: 'Disparó "sin disponibilidad" tres veces sin leer que el cliente insistía con la misma fecha. No avanzó ni derivó.' },
+  { conv: 4462, dia: '14/06', tipo: 'peor', titulo: 'Loft disparatado', cita: 'Loft de Montaña por $2.552.000.', detalle: 'Mostró el Loft a $1,27M por noche — bug del cotizador (B10), no del bot.' },
+  { conv: 4453, dia: '14/06', tipo: 'peor', titulo: 'Re-saludo + ignora contexto', cita: 'Hola, ¿cómo estás? Soy Martina... (otra vez)', detalle: 'El cliente ya había dado info y el bot se re-presentó ignorando lo que dijo.' },
+];
+
 const ACC: HumanAction[] = [
   { prioridad: 'alta', cliente: 'Walter Torres', contacto: '+5493512377956', conv: 4329, motivo: 'Tres conversaciones sin respuesta, lead partido.', accion: 'Contactar. 2 personas, finde de junio.' },
   { prioridad: 'alta', cliente: 'Débora', contacto: '+5493584902857', conv: 4341, motivo: 'Recibió un mensaje interno por error (ya arreglado). Sigue interesada.', accion: 'Retomar sin mencionarlo. Master $240k/noche o Loft $211k.' },
@@ -117,14 +184,14 @@ const ACC14: HumanAction[] = [
 ];
 
 const todo: Narrative = {
-  resumen: 'Desde el go-live (11/06 22:33) Martina atendió 164 conversaciones, la enorme mayoría sin intervención humana. El embudo sigue fuerte: cerca del 50% recibe una cotización con precio real y un 9% llega a dejar sus datos para reservar — antes del bot eran 3 de cada 100. La infraestructura es impecable (1.345 ejecuciones internas, cero fallos) y los arreglos aplicados funcionaron (saltos de línea y filtraciones en cero). Lo que queda por mejorar es de comportamiento: mensajes que se repiten por un doble disparo del juntador, el bot que a veces asume fechas o personas en vez de preguntar, y un tono que por momentos suena a formulario. Nada de esto se tocó todavía: primero el análisis completo, después un arreglo por vez.',
+  resumen: 'En las primeras 72 horas (go-live 11/06 19:33 ART) Martina atendió 282 conversaciones, casi todas sin intervención humana. El embudo se dio vuelta: el 46% recibió una cotización con precio real y el 9% llegó a dejar sus datos para reservar — antes del bot eran 3 de cada 100. La infraestructura fue impecable (6.044 ejecuciones internas, 99,97% de éxito) y lo crítico quedó blindado: cero precios inventados, cero filtraciones de instrucciones internas, cero datos bancarios expuestos. La calidad conversacional subió día a día (humanidad 6,48/10, con pico el 13/06 tras el fix de formato). Lo que queda por pulir es de comportamiento y un tema del cotizador (precios del Loft en julio). Nada se tocó todavía: primero el cuadro completo, después un arreglo por vez.',
   destacados: [
-    '164 conversaciones desde el lanzamiento · ~50% recibió cotización con precio real.',
-    'Infraestructura impecable: 1.345 ejecuciones internas, cero fallos técnicos.',
-    'Cero precios inventados y cero filtraciones de instrucciones internas en todo el período.',
-    'El bot ya sabe sonar humano: varias conversaciones indistinguibles de una persona cálida.',
+    '282 conversaciones en 72hs · 46% recibió cotización · 9% dejó datos (antes era 3%).',
+    'Infraestructura impecable: 6.044 ejecuciones internas, 99,97% de éxito (solo 2 fallos).',
+    'Cero precios inventados, cero filtraciones, cero datos bancarios expuestos.',
+    'Humanidad 6,48/10 · 60 conversaciones donde el bot brilló · 70% sin un solo bug.',
   ],
-  errores: [E_DOBLE, E_ALUC, E_FRIO, E_HUM, E_REPLOOP, E_ECO, E_NL, E_FECHA, E_ALT],
+  errores: [E_COTIZADOR, E_VISION, E_DOBLE, E_ALUC, E_ECO, E_FRIO, E_HUM, E_REPLOOP, E_RESALUDO, E_FECHA, E_ALT, R_LEAK, R_SPA, R_QUOTES, R_CHECKOUT, E_NL, R_REP],
   fixes: [
     { titulo: 'Divisor de mensajes a prueba de modelo', detalle: 'Normaliza saltos de línea, descarta repeticiones y filtra instrucciones internas. Determinístico: funciona aunque el modelo falle.', tipo: 'nodo', hora: '13/06 06:41' },
     { titulo: 'Base de conocimiento de servicios', detalle: 'Quedó claro qué entra en la tarifa (circuito hídrico, saunas, gym) y qué se paga aparte (masajes, flotación, media pensión).', tipo: 'prompt', hora: '12/06' },
@@ -132,21 +199,21 @@ const todo: Narrative = {
     { titulo: 'Acumulador blindado', detalle: 'Filtra ecos del propio bot, mensajes viejos y notas internas de Chatwoot. Junta mensajes en ráfaga.', tipo: 'acumulador', hora: '12/06' },
   ],
   funciona: [
-    { titulo: 'El embudo se dio vuelta', evidencia: 'De 3% que llegaba a datos de reserva a ~9%. Cotización: de 3% a ~50%.' },
-    { titulo: 'Infraestructura impecable', evidencia: '1.345 ejecuciones internas en el período, cero fallos técnicos.' },
-    { titulo: 'Cero precios inventados', evidencia: 'Todo precio sale del cotizador. Ningún número de la galera.' },
-    { titulo: 'Derivación de punta a punta', evidencia: 'Detecta el caso, etiqueta en Chatwoot y asigna al equipo solo.' },
-    { titulo: 'Combos para grupos', evidencia: 'Grupos de 4-5 se cotizan con dos habitaciones, sin derivar.' },
-    { titulo: 'Sabe sonar humano', evidencia: 'Hay conversaciones (Paola, Flor) indistinguibles de una persona cálida.' },
+    { titulo: 'El embudo se dio vuelta', evidencia: 'De 3% que llegaba a datos de reserva a 9%. Cotización: de 3% a 46%. Multiplicó por ~15 los que llegan a cotizar.' },
+    { titulo: 'Infraestructura sólida', evidencia: '6.044 ejecuciones internas en 72hs, 99,97% de éxito (solo 2 fallos). Absorbió el pico de 121 convs el 14/06 sin caerse.' },
+    { titulo: 'Nunca inventa precios', evidencia: 'Todo precio sale del cotizador. Hasta los precios raros del Loft vienen de la tool, no del bot.' },
+    { titulo: 'Cero datos sensibles filtrados', evidencia: '0 CBU/alias, 0 leaks de instrucción (tras el fix del 12/06). El pago lo cierra el humano.' },
+    { titulo: 'Aplica la regla de edades', evidencia: 'Reclasifica (13+ = adulto) y pide confirmación antes de cotizar, en vez de asumir.' },
+    { titulo: 'Sabe sonar humano', evidencia: '60 de 250 conversaciones (24%) donde el bot brilló: contiene la indecisión, reconoce sus errores, no inventa cuando no sabe.' },
   ],
   calidad: [
-    { label: 'Fallos técnicos del sistema', value: '0%', meta: '0 de 1.345 ejecuciones', tone: 'ok', nota: 'La infraestructura no es el problema.' },
-    { label: 'Precios inventados', value: '0%', tone: 'ok', nota: 'Todo sale del cotizador.' },
-    { label: 'Filtraciones internas', value: '0%', tone: 'ok', nota: 'Defensa en 3 capas.' },
-    { label: 'Saltos de línea visibles', value: '0%', meta: 'post-fix', tone: 'ok', nota: 'Resuelto en el divisor.' },
-    { label: 'Mensajes repetidos', value: '8', meta: '3 conversaciones', tone: 'warn', nota: 'Doble disparo del juntador (B1). Pendiente.' },
-    { label: 'Asume fechas/personas', value: '~3', meta: 'casos claros', tone: 'warn', nota: 'Debería preguntar (B2). Pendiente.' },
-    { label: 'Naturalidad del tono', value: '3,2/5', tone: 'warn', nota: 'Prioridad: que suene siempre humano (B5).' },
+    { label: 'Éxito de la infraestructura', value: '99,97%', meta: '6.042 de 6.044 ejecuciones', tone: 'ok', nota: 'El fierro no es el problema.' },
+    { label: 'Precios inventados por el bot', value: '0%', tone: 'ok', nota: 'Todo sale del cotizador.' },
+    { label: 'Filtraciones · datos bancarios', value: '0', tone: 'ok', nota: 'Blindado de punta a punta.' },
+    { label: 'Humanidad conversacional', value: '6,48/10', meta: 'pico 6,84 el 13/06', tone: 'warn', nota: 'Competente, con aristas. Subió día a día.' },
+    { label: 'Conversaciones sin ningún bug', value: '70%', meta: '174 de 250', tone: 'ok', nota: '60 donde el bot brilló.' },
+    { label: 'Precios del Loft (julio)', value: 'ROTO', meta: 'convs 4462, 4469', tone: 'bad', nota: 'Bug del cotizador (B10). Afecta ventas.' },
+    { label: 'Bugs del acumulador (plomería)', value: '~25', meta: 'doble disparo + eco + re-saludo', tone: 'warn', nota: 'La mayoría de los bugs feos, no del modelo.' },
   ],
   acciones: [...ACC14, ...ACC],
   monitoreo: [

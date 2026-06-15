@@ -6,12 +6,12 @@ import { motion } from 'framer-motion';
 import {
   TrendingUp, Share2, Activity, Bug, UserCheck, ScrollText, Clock, MessagesSquare,
   CheckCircle2, AlertTriangle, XCircle, Wrench, Eye, Lightbulb, BedDouble, ExternalLink,
-  Search, ChevronRight, ArrowDownRight, Rocket, CalendarDays, GitCommit,
+  Search, ChevronRight, ArrowDownRight, Rocket, CalendarDays, GitCommit, Star, Trophy, ThumbsDown,
 } from 'lucide-react';
 import type { Conv } from './data/conversations';
 import { convUrl, conversations } from './data/conversations';
 import type { Narrative } from './data/narrative';
-import { EVOLUCION_HITOS, REPORTE_SELLO } from './data/narrative';
+import { EVOLUCION_HITOS, REPORTE_SELLO, CASOS_72, HUMANIDAD_DIA } from './data/narrative';
 import {
   kpis, embudo, derivaciones, timeline, habitaciones, temperaturas, arTime, RAZON_LABEL, evolucionDias,
 } from './lib/metrics';
@@ -192,6 +192,7 @@ export function Evolucion({ onScope }: P) {
               <div className="flex gap-2 mt-2.5 flex-wrap">
                 <Badge tone="ok">{d.cotPct}% cotiz</Badge>
                 <Badge tone="warn">{d.derivadas} deriv</Badge>
+                {HUMANIDAD_DIA[d.dia] != null && <Badge tone="brand">😊 {HUMANIDAD_DIA[d.dia]}/10</Badge>}
               </div>
             </button>
           </Card>
@@ -221,6 +222,49 @@ export function Evolucion({ onScope }: P) {
           })}
         </div>
       </Card>
+    </div>
+  );
+}
+
+/* ───────────── CASOS DESTACADOS ───────────── */
+function CasoBloque({ titulo, items, tono, Icon }: { titulo: string; items: typeof CASOS_72; tono: 'ok' | 'bad'; Icon: any }) {
+  return (
+    <Card className="p-5 self-start">
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className={`w-9 h-9 rounded-2xl grid place-items-center ${tono === 'ok' ? 'bg-ok/12' : 'bg-bad/10'}`}>
+          <Icon size={18} className={tono === 'ok' ? 'text-ok' : 'text-bad'} />
+        </div>
+        <div>
+          <h3 className="text-[15px] font-extrabold text-ink">{titulo}</h3>
+          <p className="text-[11px] text-slatey font-medium">{items.length} conversaciones</p>
+        </div>
+      </div>
+      <div className="space-y-2.5">
+        {items.map((c) => (
+          <div key={c.conv} className={`p-3.5 rounded-2xl border ${tono === 'ok' ? 'bg-ok/[0.05] border-ok/15' : 'bg-bad/[0.05] border-bad/15'}`}>
+            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+              <span className="text-[12.5px] font-extrabold text-ink">{c.titulo}</span>
+              <Badge tone="ink">{c.dia}</Badge>
+              <ChatLink id={c.conv} />
+            </div>
+            <p className="text-[11.5px] italic text-ink/70 font-medium leading-snug">“{c.cita}”</p>
+            <p className="text-[11px] text-slatey font-medium mt-1.5 leading-relaxed">{c.detalle}</p>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+export function Casos() {
+  const mejores = CASOS_72.filter(c => c.tipo === 'mejor');
+  const peores = CASOS_72.filter(c => c.tipo === 'peor');
+  return (
+    <div className="space-y-6">
+      <SectionHeader icon={Star} title="Casos destacados" desc="Las conversaciones que mejor y peor salieron en las primeras 72hs" />
+      <div className="grid lg:grid-cols-2 gap-6">
+        <CasoBloque titulo="Donde el bot brilló" items={mejores} tono="ok" Icon={Trophy} />
+        <CasoBloque titulo="Donde falló feo" items={peores} tono="bad" Icon={ThumbsDown} />
+      </div>
     </div>
   );
 }
@@ -612,6 +656,6 @@ export function Bitacora({ nar }: P) {
 }
 
 export const SECTIONS: Record<string, (p: P) => JSX.Element> = {
-  resumen: Resumen, evolucion: Evolucion, actividad: Actividad, embudo: Embudo, derivaciones: Derivaciones,
+  resumen: Resumen, evolucion: Evolucion, casos: Casos, actividad: Actividad, embudo: Embudo, derivaciones: Derivaciones,
   conversaciones: Conversaciones, calidad: Calidad, errores: Errores, acciones: Acciones, bitacora: Bitacora,
 };
