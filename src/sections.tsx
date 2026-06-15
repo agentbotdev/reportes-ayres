@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import {
   TrendingUp, Share2, Activity, Bug, UserCheck, ScrollText, Clock, MessagesSquare,
   CheckCircle2, AlertTriangle, XCircle, Wrench, Eye, Lightbulb, BedDouble, ExternalLink,
-  Search, ChevronRight, ArrowDownRight, Rocket, CalendarDays, GitCommit, Star, Trophy, ThumbsDown,
+  Search, ChevronRight, ArrowDownRight, Rocket, CalendarDays, GitCommit, Star, Trophy,
 } from 'lucide-react';
 import type { Conv } from './data/conversations';
 import { convUrl, conversations } from './data/conversations';
@@ -256,15 +256,10 @@ function CasoBloque({ titulo, items, tono, Icon }: { titulo: string; items: type
   );
 }
 export function Casos() {
-  const mejores = CASOS_72.filter(c => c.tipo === 'mejor');
-  const peores = CASOS_72.filter(c => c.tipo === 'peor');
   return (
     <div className="space-y-6">
-      <SectionHeader icon={Star} title="Casos destacados" desc="Las conversaciones que mejor y peor salieron en las primeras 72hs" />
-      <div className="grid lg:grid-cols-2 gap-6">
-        <CasoBloque titulo="Donde el bot brilló" items={mejores} tono="ok" Icon={Trophy} />
-        <CasoBloque titulo="Donde falló feo" items={peores} tono="bad" Icon={ThumbsDown} />
-      </div>
+      <SectionHeader icon={Star} title="Casos destacados" desc="Conversaciones donde el bot estuvo a la altura de una persona, en las primeras 72hs" />
+      <CasoBloque titulo="Donde el bot brilló" items={CASOS_72} tono="ok" Icon={Trophy} />
     </div>
   );
 }
