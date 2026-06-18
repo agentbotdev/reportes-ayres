@@ -89,7 +89,9 @@ const todo: Narrative = {
   resumen: 'En los primeros 7 días (del 11/06 19:33 al 17/06) Martina atendió 481 conversaciones, casi todas sin que intervenga una persona. Casi la mitad (47%) recibió una cotización con precio real y un 10% dejó sus datos para reservar — y ese embudo se sostuvo la semana entera. El sistema funcionó redondo: 9.996 procesos internos con 99,94% de éxito, sin ninguna falla nueva el último día. Y lo importante quedó blindado: no inventó ni un precio, casi no filtró datos (un solo caso, ya corregido) y nunca pasó datos bancarios al cliente. Los errores del arranque se corrigieron rápido; los últimos 4 días no se aplicó ningún cambio (decisión de analizar primero) y el bot se mantuvo estable, sin aparecer ningún problema nuevo. La gran noticia: la tarifa del Loft de julio, que era lo más urgente, ya está sana.',
   destacados: [
     '481 conversaciones · 47% recibió cotización con precio real.',
-    '9.996 procesos internos con 99,94% de éxito (6 fallas, ninguna el último día).',
+    '8 de cada 10 conversaciones las resolvió el bot solo, sin que intervenga una persona.',
+    '9.998 procesos internos con 99,94% de éxito (6 fallas, ninguna el último día).',
+    'Responde en unos 13 segundos y atiende las 24 horas, incluida la madrugada.',
     'Cero precios inventados, cero datos bancarios pasados al cliente (una sola filtración, ya corregida).',
     '6 de cada 10 conversaciones salieron sin un solo error; la tarifa del Loft de julio ya está sana.',
   ],
@@ -111,7 +113,10 @@ const todo: Narrative = {
     { titulo: 'Tarifa del Loft, sana', evidencia: 'El precio del Loft de julio que estaba desproporcionado ya devuelve un valor normal.' },
   ],
   calidad: [
-    { label: 'Éxito del sistema', value: '99,94%', meta: '9.996 procesos, 6 fallas', tone: 'ok', nota: 'La infraestructura no es el problema.' },
+    { label: 'Éxito del sistema', value: '99,94%', meta: '9.998 procesos, 6 fallas', tone: 'ok', nota: 'La infraestructura no es el problema.' },
+    { label: 'Resueltas sin una persona', value: '8 de 10', tone: 'ok', nota: 'El bot maneja solo la mayoría del volumen.' },
+    { label: 'Tiempo de respuesta', value: '~13 seg', tone: 'ok', nota: 'Incluye pensar y cotizar con precio real.' },
+    { label: 'Uso del modelo de respaldo', value: '0%', tone: 'ok', nota: 'El modelo principal nunca falló (muestra de 80).' },
     { label: 'Precios inventados', value: '0%', tone: 'ok', nota: 'Todo sale del cotizador.' },
     { label: 'Filtraciones de datos', value: '1', tone: 'ok', nota: 'Día 2, corregida. Cero el resto del período.' },
     { label: 'Datos bancarios al cliente', value: '0', tone: 'ok', nota: 'Los maneja recepción.' },
