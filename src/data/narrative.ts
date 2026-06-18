@@ -27,7 +27,7 @@ export interface Narrative {
 }
 
 // ── Sello temporal del reporte ──
-export const REPORTE_SELLO = { inicio: '11/06 19:33 (go-live)', generado: '17/06', tz: 'ART' };
+export const REPORTE_SELLO = { inicio: '11/06 19:33 (go-live)', generado: '18/06', tz: 'ART' };
 
 // ── Línea de tiempo del proyecto (toda la vida del bot, unida por día) ──
 export interface Hito { dia: string; fecha: string; tipo: 'deploy' | 'fix' | 'analisis' | 'bug' | 'decision'; titulo: string; detalle: string; }
@@ -39,6 +39,7 @@ export const EVOLUCION_HITOS: Hito[] = [
   { dia: '2026-06-15', fecha: '15/06', tipo: 'bug', titulo: 'Falla de lectura de PDF (sin crédito)', detalle: 'Día parejo. El lector de PDF (servicio externo pdf.co) se quedó sin crédito y un cliente que mandó un PDF no recibió respuesta. Se recarga y queda resuelto.' },
   { dia: '2026-06-16', fecha: '16/06', tipo: 'analisis', titulo: 'Buen día comercial + 2 fallas del cotizador', detalle: 'El día con más reservas iniciadas (13). Aparecieron 2 fallas del cotizador cuando un cliente no dijo cuántas personas eran (el bot mandó 0 y el sistema lo rechazó). Acotado y con arreglo claro.' },
   { dia: '2026-06-17', fecha: '17/06', tipo: 'analisis', titulo: 'Cierre de semana + medición fresca', detalle: 'Media jornada sin ninguna falla nueva. Se hizo la medición completa de los 7 días y la auditoría del cotizador: confirmó que la tarifa del Loft de julio ya está sana.' },
+  { dia: '2026-06-18', fecha: '18/06', tipo: 'analisis', titulo: 'Mega reporte auditado de 7 días', detalle: 'Se cumplen los 7 días exactos del bot. 543 conversaciones, 9.997 ejecuciones (99,93%), 466 analizadas cualitativamente. Mega reporte entregado con 8 archivos. Un fallo nuevo del cotizador (adultos=0, el tercer caso).' },
 ];
 
 // ── Casos donde el bot brilló (del análisis cualitativo de las 72hs) ──
@@ -55,7 +56,7 @@ export const CASOS_72 = [
   { conv: 4627, titulo: 'Insiste con tacto y cierra', dia: '15/06', cita: '¿Me confirmás el día de ingreso así te paso el precio exacto?', detalle: 'Leyó el contexto, insistió con tacto por la fecha concreta, cotizó con el reparto de habitaciones y una alternativa, y cerró cálido.' },
   { conv: 4692, titulo: 'Calidez genuina', dia: '16/06', cita: 'Jajaja sí, te entiendo 😄', detalle: 'Leyó el tono del cliente, le siguió el chiste y cerró con paciencia y empatía, sin sonar a formulario.' },
 ];
-export const HUMANIDAD_DIA: Record<string, number> = { '2026-06-12': 5.9, '2026-06-13': 6.8, '2026-06-14': 6.4, '2026-06-15': 5.8, '2026-06-16': 6.2, '2026-06-17': 6.4 };
+export const HUMANIDAD_DIA: Record<string, number> = { '2026-06-11': 5.0, '2026-06-12': 5.9, '2026-06-13': 6.8, '2026-06-14': 6.4, '2026-06-15': 5.8, '2026-06-16': 6.2, '2026-06-17': 6.4, '2026-06-18': 6.3 };
 
 // ── Errores: RESUELTOS ──
 const E_SPA: ErrorItem = { id: 'INFO', titulo: 'Decía que el spa/circuito hídrico se pagaba aparte', sev: 'critica', estado: 'resuelto', magnitud: 'Primeros días', causa: 'La información estaba cargada mal en las instrucciones del bot.', fix: 'Se reescribió qué entra en la tarifa (desayuno, circuito hídrico, saunas, piletas, gym, SUM) y qué se paga aparte (masajes, tratamientos, media pensión).' };
