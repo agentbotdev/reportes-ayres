@@ -16,6 +16,7 @@ import {
   kpis, embudo, derivaciones, timeline, habitaciones, temperaturas, arTime, RAZON_LABEL, evolucionDias,
 } from './lib/metrics';
 import { Card, Kpi, SectionHeader, Badge, Bar as PBar, sevTone, estadoTone } from './components/ui';
+import DebugSection from './components/DebugSection';
 
 const C = { brand: '#6366F1', soft: '#818CF8', ok: '#16A34A', warn: '#EAB308', bad: '#EF4444', info: '#3B82F6', ink: '#0F172A', slate: '#94A3B8' };
 type P = { cs: Conv[]; nar: Narrative; scope: string; onScope?: (s: string) => void };
@@ -653,4 +654,5 @@ export function Bitacora({ nar }: P) {
 export const SECTIONS: Record<string, (p: P) => JSX.Element> = {
   resumen: Resumen, evolucion: Evolucion, casos: Casos, actividad: Actividad, embudo: Embudo, derivaciones: Derivaciones,
   conversaciones: Conversaciones, calidad: Calidad, errores: Errores, acciones: Acciones, bitacora: Bitacora,
+  debug: () => <DebugSection />,
 };

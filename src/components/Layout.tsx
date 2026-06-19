@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Clock, TrendingUp, Share2, MessagesSquare, Activity, Bug, UserCheck, ScrollText,
-  ChevronDown, Calendar, Menu, X, Download, LineChart, Table2, Star, type LucideIcon,
+  ChevronDown, Calendar, Menu, X, Download, LineChart, Table2, Star, Radar, type LucideIcon,
 } from 'lucide-react';
 
 export interface NavItem { id: string; label: string; icon: LucideIcon; }
@@ -18,6 +18,7 @@ export const NAV: NavItem[] = [
   { id: 'errores', label: 'Errores y arreglos', icon: Bug },
   { id: 'acciones', label: 'Para llamar', icon: UserCheck },
   { id: 'bitacora', label: 'Qué hicimos', icon: ScrollText },
+  { id: 'debug', label: 'Debug', icon: Radar },
 ];
 
 const MESES = ['', 'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
