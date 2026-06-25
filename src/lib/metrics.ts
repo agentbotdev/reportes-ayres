@@ -47,8 +47,8 @@ export const RAZON_OK: Record<string, 'si' | 'parcial' | 'no'> = {
 
 export function kpis(cs: Conv[]) {
   const bot = cs.filter(c => !c.manual);
-  const cot = cs.filter(c => ['cotizacion_enviada', 'datos_para_reserva', 'cierre', 'reserva_confirmada'].includes(c.etapa));
-  const datos = cs.filter(c => ['datos_para_reserva', 'cierre', 'reserva_confirmada'].includes(c.etapa));
+  const cot = cs.filter(c => ['cotizacion_enviada', 'datos_para_reserva', 'cierre', 'reserva_confirmada', 'postventa'].includes(c.etapa));
+  const datos = cs.filter(c => ['datos_para_reserva', 'cierre', 'reserva_confirmada', 'postventa'].includes(c.etapa));
   const der = cs.filter(c => c.derivado);
   const totMsgs = cs.reduce((a, c) => a + c.msgsCliente + c.msgsBot, 0);
   return {
@@ -89,7 +89,7 @@ export function timeline(cs: Conv[]) {
     map[k] ||= { hora: k, total: 0, derivadas: 0, cotizadas: 0 };
     map[k].total++;
     if (c.derivado) map[k].derivadas++;
-    if (['cotizacion_enviada', 'datos_para_reserva', 'cierre'].includes(c.etapa)) map[k].cotizadas++;
+    if (['cotizacion_enviada', 'datos_para_reserva', 'cierre', 'reserva_confirmada', 'postventa'].includes(c.etapa)) map[k].cotizadas++;
   });
   return Object.values(map).sort((a, b) => a.hora.localeCompare(b.hora));
 }
@@ -122,8 +122,8 @@ export interface DiaEvol {
 
 // Evolución día por día del período completo (toda la vida del bot, unida).
 export function evolucionDias(cs: Conv[]): DiaEvol[] {
-  const COT = ['cotizacion_enviada', 'datos_para_reserva', 'cierre', 'reserva_confirmada'];
-  const DAT = ['datos_para_reserva', 'cierre', 'reserva_confirmada'];
+  const COT = ['cotizacion_enviada', 'datos_para_reserva', 'cierre', 'reserva_confirmada', 'postventa'];
+  const DAT = ['datos_para_reserva', 'cierre', 'reserva_confirmada', 'postventa'];
   const map: Record<string, DiaEvol> = {};
   cs.filter(c => c.creada >= LAUNCH).forEach(c => {
     const k = arDayKey(c.creada);

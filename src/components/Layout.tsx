@@ -2,17 +2,19 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Clock, TrendingUp, Share2, MessagesSquare, Activity, Bug, UserCheck, ScrollText,
-  ChevronDown, Calendar, Menu, X, Download, LineChart, Table2, Star, Radar, type LucideIcon,
+  ChevronDown, Calendar, Menu, X, Download, LineChart, Table2, Star, Radar, Trophy, Target, type LucideIcon,
 } from 'lucide-react';
 
 export interface NavItem { id: string; label: string; icon: LucideIcon; }
 export const NAV: NavItem[] = [
   { id: 'resumen', label: 'Resumen', icon: LayoutDashboard },
+  { id: 'resultados', label: 'Resultados', icon: Trophy },
   { id: 'evolucion', label: 'Evolución', icon: LineChart },
   { id: 'casos', label: 'Casos destacados', icon: Star },
   { id: 'actividad', label: 'Por hora', icon: Clock },
   { id: 'embudo', label: 'Embudo de ventas', icon: TrendingUp },
-  { id: 'derivaciones', label: 'Pasadas al equipo', icon: Share2 },
+  { id: 'oportunidades', label: 'Oportunidades', icon: Target },
+  { id: 'derivaciones', label: 'Derivaciones', icon: Share2 },
   { id: 'conversaciones', label: 'Todos los chats', icon: MessagesSquare },
   { id: 'calidad', label: 'Calidad del bot', icon: Activity },
   { id: 'errores', label: 'Errores y arreglos', icon: Bug },

@@ -7,7 +7,7 @@ export type Estado = 'resuelto' | 'aplicado' | 'pendiente' | 'descartado';
 
 export interface ErrorItem { id: string; titulo: string; sev: Sev; estado: Estado; magnitud: string; causa: string; fix: string; nota?: string; }
 export interface FixItem { titulo: string; detalle: string; tipo: string; hora?: string; }
-export interface QualityMetric { label: string; value: string; meta?: string; tone: 'ok' | 'warn' | 'bad'; nota?: string; }
+export interface QualityMetric { label: string; value: string; meta?: string; tone: 'ok' | 'warn' | 'bad'; nota?: string; benchmark?: string; }
 export interface HumanAction { prioridad: 'alta' | 'media' | 'baja'; cliente: string; contacto?: string; conv: number; motivo: string; accion: string; }
 export interface Bit { hora: string; texto: string; tipo: 'deploy' | 'fix' | 'analisis' | 'decision' | 'nota'; }
 export interface Pred { texto: string; riesgo: 'alto' | 'medio' | 'bajo'; }
@@ -27,7 +27,102 @@ export interface Narrative {
 }
 
 // ── Sello temporal del reporte ──
-export const REPORTE_SELLO = { inicio: '11/06 19:33 (go-live)', generado: '18/06', tz: 'ART' };
+export const REPORTE_SELLO = { inicio: '11/06 19:33 (go-live)', generado: '23/06', tz: 'ART' };
+
+// ── RESULTADOS: la plata que generó el bot (del análisis maestro, no del dataset) ──
+export interface ResultadoHero { value: string; label: string; sub?: string; icon: string; tone: string; }
+export const RESULTADOS = {
+  hero: [
+    { value: '22', label: 'Reservas generadas', sub: 'cerradas por Martina', icon: 'flame', tone: 'brand' },
+    { value: '68', label: 'Noches vendidas', sub: 'sumando todas las reservas', icon: 'trend', tone: 'ok' },
+    { value: '~$13 M', label: 'Ingresos atribuidos', sub: 'en reservas que pasaron por el bot', icon: 'tag', tone: 'ok' },
+    { value: '~1 de 5', label: 'Reservas del hotel pasó por el bot', sub: 'cerca del 20% del total', icon: 'users', tone: 'info' },
+  ] as ResultadoHero[],
+  desglose: [
+    { titulo: '18 reservas confirmadas por recepción', detalle: '52 noches vendidas, confirmadas directamente por el equipo.' },
+    { titulo: '4 reservas trazadas por seguimiento', detalle: '16 noches más, identificadas siguiendo las conversaciones del bot.' },
+    { titulo: '22 reservas · 68 noches en total', detalle: 'La suma de lo confirmado por recepción más lo trazado por seguimiento.' },
+  ],
+  evidencia: {
+    monto: '$6.472.467',
+    texto: '13 de esas reservas ya están confirmadas por DNI en el sistema. Es el piso 100% verificable: plata real, atada a un documento.',
+  },
+  roi: {
+    costo: '~$75',
+    texto: 'Por un costo de alrededor de $75 por mes, Martina está atribuida a cerca de $13 millones en reservas en apenas 13 días. El costo del bot es mínimo frente a lo que mueve.',
+  },
+  reactivaciones: {
+    cant: 6,
+    base: 22,
+    pct: 27,
+    texto: '6 de las 22 reservas son clientes que ya habían pasado por el hotel y volvieron gracias al bot. Martina también "despierta" a los clientes dormidos.',
+  },
+};
+
+// ── OPORTUNIDADES: las 3 "fugas" presentadas como plata recuperable (framing del dueño) ──
+export interface Oportunidad {
+  titulo: string;
+  quePasa: string;      // qué pasa hoy, 1-2 líneas simples
+  oportunidad: string;  // la oportunidad / plata en pausa
+  solucion: string;     // la solución concreta
+  estimado?: string;    // chip de número (puede ser estimación)
+  esEstimacion?: boolean;
+  icon: 'usersPause' | 'handoff' | 'calendar';
+}
+export const FUGAS: Oportunidad[] = [
+  {
+    titulo: 'Clientes tibios: los que ya tienen precio',
+    quePasa: 'Alrededor de 320 personas recibieron una cotización y todavía no dieron el siguiente paso. De cada 10 que reciben precio, unos 3 quedan en pausa.',
+    oportunidad: 'No es plata perdida: es plata en pausa. Un mensaje de seguimiento a las 24-72hs puede despertar a varios.',
+    solucion: 'Seguimiento automático para los que cotizaron y no avanzaron.',
+    estimado: '~30 reservas más',
+    esEstimacion: true,
+    icon: 'usersPause',
+  },
+  {
+    titulo: 'Derivaciones para retomar más rápido',
+    quePasa: 'Cuando el bot pasa una consulta a una persona, el bot ya hizo su parte en segundos. El cliente queda calentito, listo para que el equipo lo tome.',
+    oportunidad: 'Retomar ágil = más cierres. Hay clientes calientes esperando del otro lado.',
+    solucion: 'Un aviso/notificador para que el equipo no deje enfriar las derivaciones.',
+    icon: 'handoff',
+  },
+  {
+    titulo: 'Fechas llenas, pero con alternativa',
+    quePasa: 'Cuando una fecha está completa (alrededor de 143 consultas, ~15%), hoy el bot deriva sin ofrecer otra opción.',
+    oportunidad: 'El cotizador YA calcula fechas alternativas con precio. Solo falta ofrecerlas para rescatar consultas que hoy se van.',
+    solucion: 'Mejora chica (el dato ya está calculado) para que el bot ofrezca la alternativa.',
+    estimado: '~143 consultas · ~15%',
+    icon: 'calendar',
+  },
+];
+
+// ── DERIVACIONES: desglose del universo 986 (calculado offline, clasificación automática del contenido) ──
+export interface DerivTipo { label: string; cant: number; }
+export const DERIVACIONES = {
+  total: 167,
+  porcentaje: '16,9%',          // del total de 986 conversaciones
+  cierresRecepcion: 36,         // clientes que ya iban a reservar y pasan a una persona para cerrar
+  // Clasificación automática del contenido de las conversaciones (suma 167)
+  tipos: [
+    { label: 'Cierre → recepción', cant: 36 },
+    { label: 'Consulta general', cant: 72 },
+    { label: 'Spa / wellness', cant: 33 },
+    { label: 'Suite Petit Hotel', cant: 6 },
+    { label: 'Grupo grande', cant: 6 },
+    { label: 'Voucher / gift card', cant: 5 },
+    { label: 'Sin disponibilidad', cant: 5 },
+    { label: 'Pensión / all inclusive', cant: 4 },
+  ] as DerivTipo[],
+  // En qué etapa del flujo se produce la derivación
+  porMomento: [
+    { label: 'Indagación', cant: 82 },
+    { label: 'Datos para reserva', cant: 36 },
+    { label: 'Presentación', cant: 21 },
+    { label: 'Cotización', cant: 14 },
+    { label: 'Validación de fechas', cant: 13 },
+  ] as DerivTipo[],
+  porHabitacion: { master: 81, loft: 17 },
+};
 
 // ── Línea de tiempo del proyecto (toda la vida del bot, unida por día) ──
 export interface Hito { dia: string; fecha: string; tipo: 'deploy' | 'fix' | 'analisis' | 'bug' | 'decision'; titulo: string; detalle: string; }
@@ -37,9 +132,10 @@ export const EVOLUCION_HITOS: Hito[] = [
   { dia: '2026-06-13', fecha: '13/06', tipo: 'deploy', titulo: 'Divisor de mensajes a prueba de fallos', detalle: 'Se mejoró el sistema que separa los mensajes: ya no muestra saltos de línea raros ni repite mensajes. Validado: cero casos después del arreglo.' },
   { dia: '2026-06-14', fecha: '14/06', tipo: 'analisis', titulo: 'Día de mayor tráfico + análisis profundo', detalle: 'El día con más consultas (128). Se revisó toda la operación a fondo. La infraestructura aguantó sin caídas y se detectaron los puntos finos que quedan por pulir.' },
   { dia: '2026-06-15', fecha: '15/06', tipo: 'bug', titulo: 'Falla de lectura de PDF (sin crédito)', detalle: 'Día parejo. El lector de PDF (servicio externo pdf.co) se quedó sin crédito y un cliente que mandó un PDF no recibió respuesta. Se recarga y queda resuelto.' },
-  { dia: '2026-06-16', fecha: '16/06', tipo: 'analisis', titulo: 'Buen día comercial + 2 fallas del cotizador', detalle: 'El día con más reservas iniciadas (13). Aparecieron 2 fallas del cotizador cuando un cliente no dijo cuántas personas eran (el bot mandó 0 y el sistema lo rechazó). Acotado y con arreglo claro.' },
+  { dia: '2026-06-16', fecha: '16/06', tipo: 'analisis', titulo: 'Buen día comercial + 2 fallas del cotizador', detalle: 'El día con más clientes que dejaron datos para reservar (15). Aparecieron 2 fallas del cotizador cuando un cliente no dijo cuántas personas eran (el bot mandó 0 y el sistema lo rechazó). Acotado y con arreglo claro.' },
   { dia: '2026-06-17', fecha: '17/06', tipo: 'analisis', titulo: 'Cierre de semana + medición fresca', detalle: 'Media jornada sin ninguna falla nueva. Se hizo la medición completa de los 7 días y la auditoría del cotizador: confirmó que la tarifa del Loft de julio ya está sana.' },
-  { dia: '2026-06-18', fecha: '18/06', tipo: 'analisis', titulo: 'Mega reporte auditado de 7 días', detalle: 'Se cumplen los 7 días exactos del bot. 543 conversaciones, 9.997 ejecuciones (99,93%), 466 analizadas cualitativamente. Mega reporte entregado con 8 archivos. Un fallo nuevo del cotizador (adultos=0, el tercer caso).' },
+  { dia: '2026-06-18', fecha: '18/06', tipo: 'analisis', titulo: 'Primer mega reporte (7 días)', detalle: 'Se cumplen los primeros 7 días del bot y se entrega el primer reporte integral con el análisis cualitativo de las conversaciones. Un fallo nuevo del cotizador (adultos=0, el tercer caso), acotado.' },
+  { dia: '2026-06-23', fecha: '19-23/06', tipo: 'analisis', titulo: 'Reporte integral de 13 días', detalle: 'Se extiende la medición a los 13 días completos: 986 conversaciones, 10.134 ejecuciones (99,88%). Resultado de negocio confirmado: 22 reservas, 68 noches y alrededor de $13 millones — cerca de 1 de cada 5 reservas del hotel en el período.' },
 ];
 
 // ── Casos donde el bot brilló (del análisis cualitativo de las 72hs) ──
@@ -79,22 +175,23 @@ const D_AISLADOS: ErrorItem = { id: 'AISL', titulo: 'Casos técnicos aislados', 
 const D_ASUME: ErrorItem = { id: 'LOG', titulo: 'A veces asume fechas o personas en vez de preguntar', sev: 'media', estado: 'pendiente', magnitud: 'Algunos casos', causa: 'Ante una fecha vaga ("la semana que viene") o una composición ambigua, a veces completa el dato solo.', fix: 'Reforzar que siempre pregunte cuando falta una fecha o la cantidad de personas.' };
 
 const ACC72: HumanAction[] = [
-  { prioridad: 'alta', cliente: 'JV', contacto: '+5491161195564', conv: 4494, motivo: 'Eligió Master Suite y llegó a la forma de pago.', accion: 'Cerrar la reserva.' },
-  { prioridad: 'alta', cliente: 'Jimena Bertone', contacto: '+5493515293110', conv: 4451, motivo: 'Eligió Master, llegó a datos de reserva.', accion: 'Cerrar.' },
-  { prioridad: 'alta', cliente: 'Eliana', contacto: '+5493513077724', conv: 4505, motivo: 'Lead caliente con datos (Loft).', accion: 'Cerrar.' },
-  { prioridad: 'media', cliente: 'Patricia', contacto: '+5493571593633', conv: 4460, motivo: 'Llegó a datos de reserva (Loft).', accion: 'Retomar.' },
-  { prioridad: 'media', cliente: 'Lic. Fiama Mignola', contacto: '+5493534595555', conv: 4454, motivo: 'El bot se le colgó al recibir una imagen y quedó sin respuesta.', accion: 'Disculparse y retomar.' },
+  { prioridad: 'alta', cliente: 'Ro', contacto: '+5493416668427', conv: 0, motivo: 'Llegó a dejar datos (Master) y quedó en avanzar apenas tenga la info — 23/06.', accion: 'Retomar y cerrar.' },
+  { prioridad: 'alta', cliente: 'Luz', contacto: '+5493516968640', conv: 0, motivo: 'Preguntó por desayuno e instalaciones (Loft), llegó a datos sin cerrar — 23/06.', accion: 'Responder y cerrar.' },
+  { prioridad: 'media', cliente: 'Roxana Carrizo', contacto: '+5493571577183', conv: 0, motivo: 'Dejó datos (Master) y dijo que lo confirma — 22/06.', accion: 'Retomar.' },
+  { prioridad: 'media', cliente: 'Gustavo Cutraro', contacto: '+5491151578434', conv: 0, motivo: 'Llegó a datos (Loft), lo está hablando con la señora — 22/06.', accion: 'Seguir.' },
+  { prioridad: 'media', cliente: 'Matías', contacto: '+5493584118208', conv: 0, motivo: 'Dejó datos (Master) preguntando precio de julio — 21/06.', accion: 'Cotizar julio y cerrar.' },
+  { prioridad: 'media', cliente: 'Martín Vázquez', contacto: '+5493415645994', conv: 0, motivo: 'Llegó a datos de reserva (Master) sin cerrar — 21/06.', accion: 'Retomar.' },
 ];
 
 const todo: Narrative = {
-  resumen: 'En los primeros 7 días (del 11/06 19:33 al 17/06) Martina atendió 481 conversaciones, casi todas sin que intervenga una persona. Casi la mitad (47%) recibió una cotización con precio real y un 10% dejó sus datos para reservar — y ese embudo se sostuvo la semana entera. El sistema funcionó redondo: 9.996 procesos internos con 99,94% de éxito, sin ninguna falla nueva el último día. Y lo importante quedó blindado: no inventó ni un precio, casi no filtró datos (un solo caso, ya corregido) y nunca pasó datos bancarios al cliente. Los errores del arranque se corrigieron rápido; los últimos 4 días no se aplicó ningún cambio (decisión de analizar primero) y el bot se mantuvo estable, sin aparecer ningún problema nuevo. La gran noticia: la tarifa del Loft de julio, que era lo más urgente, ya está sana.',
+  resumen: 'En 13 días (del 11/06 19:33 al 23/06) Martina atendió 986 conversaciones, el 96% sin que intervenga una persona. El 42% recibió una cotización —y casi todas (39,7% del total) con un precio real y concreto del cotizador— y un 8% dejó sus datos para reservar. El sistema funcionó redondo: 10.134 procesos internos con 99,88% de éxito y solo 12 fallas menores en 13 días. Lo importante quedó blindado: no inventó ni un precio en todo el período, nunca pasó datos bancarios y la única filtración interna (día 2) se corrigió al instante. La baja del % de cotización hacia el final es estacional (julio se llena y el hotel ya tiene buena ocupación), no un deterioro del bot. Y la gran noticia: Martina generó 22 reservas (68 noches, alrededor de $13 millones) — cerca de 1 de cada 5 reservas que entró al hotel en estos días.',
   destacados: [
-    '481 conversaciones · 47% recibió cotización con precio real.',
-    '8 de cada 10 conversaciones las resolvió el bot solo, sin que intervenga una persona.',
-    '9.998 procesos internos con 99,94% de éxito (6 fallas, ninguna el último día).',
-    'Responde en unos 13 segundos y atiende las 24 horas, incluida la madrugada.',
-    'Cero precios inventados, cero datos bancarios pasados al cliente (una sola filtración, ya corregida).',
-    '6 de cada 10 conversaciones salieron sin un solo error; la tarifa del Loft de julio ya está sana.',
+    '986 conversaciones en 13 días · 42% recibió una cotización (39,7% con precio real).',
+    '22 reservas generadas · 68 noches · ~$13 millones · cerca de 1 de cada 5 del hotel.',
+    'El bot resolvió solo el 96% de las conversaciones; apenas el 4% pasó a una persona.',
+    '10.134 procesos internos con 99,88% de éxito (12 fallas menores en 13 días).',
+    'Responde en unos 12 segundos y atiende las 24 horas, incluida la madrugada.',
+    'Cero precios inventados y cero datos bancarios al cliente; la única filtración (día 2) ya está corregida.',
   ],
   errores: [E_SPA, E_LEAK, E_QUOTE, E_CHECKOUT, E_FRIO0, E_HIDRO, E_FORMATO, E_NOMBRE, D_LOFT, D_FAMILY, D_PAX0, D_SINDISP, D_COMPO, D_AISLADOS, D_PDF, D_ASUME],
   fixes: [
@@ -106,22 +203,22 @@ const todo: Narrative = {
     { titulo: 'Triple barrera de seguridad', detalle: 'Para que nunca se filtre una instrucción interna al cliente.', tipo: 'seguridad', hora: '12/06' },
   ],
   funciona: [
-    { titulo: 'Nunca inventó un precio', evidencia: 'Todo precio sale del cotizador real, durante los 7 días.' },
+    { titulo: 'Nunca inventó un precio', evidencia: 'Todo precio sale del cotizador real, durante los 13 días.' },
     { titulo: 'Cero datos bancarios al cliente', evidencia: 'En las conversaciones que llegaron a la seña, nunca pasó CBU ni alias.' },
-    { titulo: 'Infraestructura sólida', evidencia: '9.996 procesos internos con 99,94% de éxito; sin fallas nuevas el último día.' },
-    { titulo: 'Deriva en el momento justo', evidencia: 'Grupos grandes, vouchers, Day Spa y cierres de reserva pasan al equipo correctamente (30 cierres derivados).' },
-    { titulo: '6 de cada 10 sin un solo error', evidencia: 'La mayoría de las conversaciones salieron limpias; el embudo de ventas se sostuvo toda la semana.' },
+    { titulo: 'Infraestructura sólida', evidencia: '10.134 procesos internos con 99,88% de éxito; solo 12 fallas menores en 13 días.' },
+    { titulo: 'Deriva en el momento justo', evidencia: 'Grupos grandes, vouchers, Day Spa y cierres de reserva pasan al equipo correctamente.' },
+    { titulo: 'El bot resuelve solo', evidencia: 'El 96% de las conversaciones las maneja el bot sin intervención de una persona.' },
     { titulo: 'Tarifa del Loft, sana', evidencia: 'El precio del Loft de julio que estaba desproporcionado ya devuelve un valor normal.' },
   ],
   calidad: [
-    { label: 'Éxito del sistema', value: '99,94%', meta: '9.998 procesos, 6 fallas', tone: 'ok', nota: 'La infraestructura no es el problema.' },
-    { label: 'Resueltas sin una persona', value: '8 de 10', tone: 'ok', nota: 'El bot maneja solo la mayoría del volumen.' },
-    { label: 'Tiempo de respuesta', value: '~13 seg', tone: 'ok', nota: 'Incluye pensar y cotizar con precio real.' },
+    { label: 'Éxito del sistema', value: '99,88%', meta: '10.134 procesos, 12 fallas', tone: 'ok', nota: 'La infraestructura no es el problema.', benchmark: 'A la par del estándar de la industria para sistemas en producción (~99,9% de disponibilidad).' },
+    { label: 'Resueltas sin una persona', value: '96%', tone: 'ok', nota: 'Solo el 4% de las conversaciones pasó a una persona.' },
+    { label: 'Tiempo de respuesta', value: '~12 seg', tone: 'ok', nota: 'Incluye pensar y cotizar con precio real.', benchmark: 'La industria considera excelente responder a un lead en menos de 5 minutos (estudios MIT/InsideSales). Martina responde en ~12 segundos: muy por debajo de ese umbral.' },
+    { label: 'Cobertura 24/7', value: '24 hs', meta: '~10% de las consultas llegan de noche', tone: 'ok', nota: 'El bot suma atención las 24 horas, incluida la madrugada: cobertura que antes no existía.' },
     { label: 'Uso del modelo de respaldo', value: '0%', tone: 'ok', nota: 'El modelo principal nunca falló (muestra de 80).' },
-    { label: 'Precios inventados', value: '0%', tone: 'ok', nota: 'Todo sale del cotizador.' },
-    { label: 'Filtraciones de datos', value: '1', tone: 'ok', nota: 'Día 2, corregida. Cero el resto del período.' },
+    { label: 'Precios inventados', value: '0', tone: 'ok', nota: 'Todo sale del cotizador, en los 13 días.' },
+    { label: 'Filtraciones de datos', value: '1', tone: 'ok', nota: 'Día 2, corregida al instante. Cero el resto del período.' },
     { label: 'Datos bancarios al cliente', value: '0', tone: 'ok', nota: 'Los maneja recepción.' },
-    { label: 'Conversaciones sin error', value: '6 de 10', tone: 'ok' },
     { label: 'Precios del Loft (julio)', value: 'sana', tone: 'ok', nota: 'El problema más urgente, ya resuelto.' },
   ],
   acciones: ACC72,
@@ -145,17 +242,29 @@ const todo: Narrative = {
     { hora: '15/06', texto: 'Día parejo. Falla del lector de PDF por falta de crédito (1 caso).', tipo: 'nota' },
     { hora: '16/06', texto: 'Mejor día comercial (13 reservas iniciadas) + 2 fallas del cotizador por "0 personas".', tipo: 'analisis' },
     { hora: '17/06', texto: 'Cierre de semana sin fallas nuevas. Medición fresca + auditoría: tarifa del Loft sana.', tipo: 'analisis' },
+    { hora: '18/06', texto: 'Arranque de la 2da semana con tráfico alto (89) y 54% de cotización. Estable.', tipo: 'nota' },
+    { hora: '19/06', texto: 'Día parejo (76). El % de cotización empieza a acomodarse al patrón estacional (julio se llena).', tipo: 'nota' },
+    { hora: '20/06', texto: 'Tráfico alto (90). % de cotización en 40%, en línea con la estacionalidad. Sin novedades.', tipo: 'nota' },
+    { hora: '21/06', texto: 'Tráfico alto (91) y día con más derivaciones del período (23). Sistema estable.', tipo: 'nota' },
+    { hora: '22/06', texto: 'Récord de conversaciones del período (113). Volumen alto sin caídas; más consultas se derivan (estacional).', tipo: 'analisis' },
+    { hora: '23/06', texto: 'Cierre del reporte de 13 días (93). Se consolida la medición integral del período.', tipo: 'analisis' },
   ],
 };
 
 // Días puntuales (resumen breve por jornada)
 const dia11: Narrative = { ...todo, resumen: 'Go-live a las 19:33 ART. En las primeras horas (tráfico de tarde-noche) el bot cotizó al 72% de los clientes. Arranque fuerte.', destacados: ['Go-live 19:33 ART', '72% de cotización en las primeras horas', '18 conversaciones'], acciones: [] };
-const dia12: Narrative = { ...todo, resumen: 'Primer día completo. El equipo reportó errores de información (spa, horarios, mensajes citados) y se corrigieron TODOS el mismo día. El caso de "falsa disponibilidad" se investigó: no era un error, el finde se había vendido de verdad.', destacados: ['63 conversaciones · 48% cotización', 'Todos los errores reportados, corregidos el mismo día', 'Cero precios inventados'] };
+const dia12: Narrative = { ...todo, resumen: 'Primer día completo. El equipo reportó errores de información (spa, horarios, mensajes citados) y se corrigieron TODOS el mismo día. El caso de "falsa disponibilidad" se investigó: no era un error, el finde se había vendido de verdad.', destacados: ['63 conversaciones · 49% cotización', 'Todos los errores reportados, corregidos el mismo día', 'Cero precios inventados'] };
 const dia13: Narrative = { ...todo, resumen: 'Día de validación. Los arreglos del 12 aguantaron: cero recaídas. Se reforzó el divisor de mensajes (saltos de línea y repeticiones), con cero casos después del arreglo.', destacados: ['57 conversaciones · 58% cotización', 'Los fixes del 12 aguantaron', 'Divisor de mensajes blindado'] };
 const dia14: Narrative = { ...todo, resumen: 'Día de mayor tráfico (128 conversaciones). El sistema aguantó sin caídas. Se hizo el análisis profundo que dejó documentadas las detecciones que quedan por pulir.', destacados: ['128 conversaciones · 41% cotización', 'Día pico, sin caídas de sistema', 'Análisis profundo completo'] };
 const dia15: Narrative = { ...todo, resumen: 'Día parejo, sin cambios aplicados. El lector de PDF se quedó sin crédito y un cliente que mandó un PDF no recibió respuesta (caso aislado). El resto, estable.', destacados: ['57 conversaciones · 46% cotización', 'Falla del lector de PDF (sin crédito)', 'Bot estable, sin problemas nuevos'] };
-const dia16: Narrative = { ...todo, resumen: 'El mejor día comercial: 13 reservas iniciadas. Aparecieron 2 fallas del cotizador cuando un cliente no dijo cuántas personas eran (el bot mandó 0 y el sistema lo rechazó). Acotado y con arreglo claro.', destacados: ['91 conversaciones · 46% cotización · 13 reservas iniciadas', '2 fallas del cotizador por "0 personas"', 'Mejor día de conversión de la semana'] };
-const dia17: Narrative = { ...todo, resumen: 'Media jornada de cierre, sin ninguna falla nueva. Se hizo la medición completa de los 7 días y la auditoría del cotizador, que confirmó que la tarifa del Loft de julio ya está sana.', destacados: ['21 conversaciones · 52% cotización', 'Cero fallas nuevas de sistema', 'Tarifa del Loft de julio: confirmada sana'] };
+const dia16: Narrative = { ...todo, resumen: 'El mejor día comercial: 15 reservas iniciadas. Aparecieron 2 fallas del cotizador cuando un cliente no dijo cuántas personas eran (el bot mandó 0 y el sistema lo rechazó). Acotado y con arreglo claro.', destacados: ['91 conversaciones · 47% cotización · 15 reservas iniciadas', '2 fallas del cotizador por "0 personas"', 'Mejor día de conversión de la semana'] };
+const dia17: Narrative = { ...todo, resumen: 'Media jornada de cierre, sin ninguna falla nueva. Se hizo la medición completa de los 7 días y la auditoría del cotizador, que confirmó que la tarifa del Loft de julio ya está sana. Pocas consultas, pero con el mejor % de cotización del período.', destacados: ['20 conversaciones · 65% cotización', 'Cero fallas nuevas de sistema', 'Tarifa del Loft de julio: confirmada sana'] };
+const dia18: Narrative = { ...todo, resumen: 'Arranque de la segunda semana con tráfico alto (89 conversaciones) y buen ritmo de cotización (54%). Día sólido y estable, sin fallas nuevas de sistema.', destacados: ['89 conversaciones · 54% cotización', '8 dejaron datos para reservar', 'Día estable, sin fallas nuevas'] };
+const dia19: Narrative = { ...todo, resumen: 'Día parejo (76 conversaciones). El % de cotización (46%) empieza a acomodarse al patrón estacional: julio se va llenando y muchas consultas llegan sobre fechas con buena ocupación. Sistema estable.', destacados: ['76 conversaciones · 46% cotización', '5 dejaron datos · 11 derivaciones', 'Patrón estacional: julio se llena'] };
+const dia20: Narrative = { ...todo, resumen: 'Tráfico alto (90 conversaciones) con el % de cotización en 40%, en línea con la estacionalidad del período (más fechas con ocupación alta). Sin novedades de sistema.', destacados: ['90 conversaciones · 40% cotización', '4 dejaron datos · 13 derivaciones', 'Baja del % de cotización: estacional, no deterioro'] };
+const dia21: Narrative = { ...todo, resumen: 'Tráfico alto (91 conversaciones) y el día con más derivaciones del período (23): cada vez más consultas pasan al equipo para cerrar o por fechas con ocupación. El % de cotización (32%) sigue el patrón estacional. Sistema estable.', destacados: ['91 conversaciones · 32% cotización', 'Día con más derivaciones del período (23)', '6 dejaron datos para reservar'] };
+const dia22: Narrative = { ...todo, resumen: 'El día con más conversaciones del período (113). El % de cotización (25%) refleja la estacionalidad: con julio ya con buena ocupación, una parte mayor de las consultas se deriva en vez de cotizarse. Volumen récord, sistema sin caídas.', destacados: ['113 conversaciones · 25% cotización', 'Día de MÁS conversaciones del período', '9 dejaron datos para reservar'] };
+const dia23: Narrative = { ...todo, resumen: 'Cierre del reporte de 13 días con tráfico alto (93 conversaciones) y % de cotización (30%) en el rango estacional. Se consolida la medición integral del período. Sistema estable hasta el final.', destacados: ['93 conversaciones · 30% cotización', '4 dejaron datos · 15 derivaciones', 'Cierre del período de 13 días'] };
 
-export const narrative: Record<string, Narrative> = { todo, '2026-06-11': dia11, '2026-06-12': dia12, '2026-06-13': dia13, '2026-06-14': dia14, '2026-06-15': dia15, '2026-06-16': dia16, '2026-06-17': dia17 };
+export const narrative: Record<string, Narrative> = { todo, '2026-06-11': dia11, '2026-06-12': dia12, '2026-06-13': dia13, '2026-06-14': dia14, '2026-06-15': dia15, '2026-06-16': dia16, '2026-06-17': dia17, '2026-06-18': dia18, '2026-06-19': dia19, '2026-06-20': dia20, '2026-06-21': dia21, '2026-06-22': dia22, '2026-06-23': dia23 };
 export const getNarrative = (scope: string): Narrative => narrative[scope] || narrative.todo;

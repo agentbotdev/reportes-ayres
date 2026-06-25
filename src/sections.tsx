@@ -7,13 +7,15 @@ import {
   TrendingUp, Share2, Activity, Bug, UserCheck, ScrollText, Clock, MessagesSquare,
   CheckCircle2, AlertTriangle, XCircle, Wrench, Eye, Lightbulb, BedDouble, ExternalLink,
   Search, ChevronRight, ArrowDownRight, Rocket, CalendarDays, GitCommit, Star, Trophy,
+  BadgeCheck, DollarSign, RotateCcw, Flame, Tag, Users,
+  Target, UserPlus, Bell, CalendarClock, ArrowRight, Sparkles,
 } from 'lucide-react';
 import type { Conv } from './data/conversations';
 import { convUrl, conversations } from './data/conversations';
 import type { Narrative } from './data/narrative';
-import { EVOLUCION_HITOS, REPORTE_SELLO, CASOS_72, HUMANIDAD_DIA } from './data/narrative';
+import { EVOLUCION_HITOS, REPORTE_SELLO, CASOS_72, HUMANIDAD_DIA, RESULTADOS, FUGAS, DERIVACIONES } from './data/narrative';
 import {
-  kpis, embudo, derivaciones, timeline, habitaciones, temperaturas, arTime, RAZON_LABEL, evolucionDias,
+  kpis, embudo, timeline, habitaciones, temperaturas, arTime, evolucionDias,
 } from './lib/metrics';
 import { Card, Kpi, SectionHeader, Badge, Bar as PBar, sevTone, estadoTone } from './components/ui';
 import DebugSection from './components/DebugSection';
@@ -123,6 +125,174 @@ export function Resumen({ cs, nar }: P) {
           ))}
         </div>
       </Card>
+    </div>
+  );
+}
+
+/* ───────────── RESULTADOS (la plata que generó el bot) ───────────── */
+const RES_ICON: Record<string, any> = { flame: Flame, trend: TrendingUp, tag: Tag, users: Users };
+const RES_TONE: Record<string, { text: string; bg: string }> = {
+  brand: { text: 'text-brand', bg: 'bg-brand/10' },
+  ok: { text: 'text-ok', bg: 'bg-ok/10' },
+  info: { text: 'text-info', bg: 'bg-info/10' },
+};
+export function Resultados() {
+  const R = RESULTADOS;
+  return (
+    <div className="space-y-6">
+      {/* HERO */}
+      <Card className="p-6 sm:p-8 relative overflow-hidden">
+        <div className="absolute -right-12 -top-12 w-56 h-56 rounded-full brand-gradient opacity-[0.07] blur-2xl" />
+        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-brand mb-3 bg-brand/10 rounded-full px-3 py-1">
+          <Trophy size={12.5} /> Resultados de negocio
+        </div>
+        <h2 className="text-2xl sm:text-[28px] font-extrabold text-ink-gradient tracking-tight mb-1.5">La plata que generó Martina</h2>
+        <p className="text-sm text-slatey leading-relaxed max-w-3xl font-medium">
+          Esto es lo que el bot movió de verdad en sus primeros 13 días: reservas, noches e ingresos atribuidos.
+        </p>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mt-6">
+          {R.hero.map((h, i) => {
+            const I = RES_ICON[h.icon] || Flame;
+            const t = RES_TONE[h.tone] || RES_TONE.brand;
+            return (
+              <motion.div key={i} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                className="rounded-3xl bg-white/70 border border-slate-200/70 p-5 sm:p-6 hover:-translate-y-0.5 transition-transform">
+                <div className={`w-11 h-11 rounded-2xl grid place-items-center ${t.bg}`}>
+                  <I size={20} className={t.text} />
+                </div>
+                <div className={`mt-4 text-[40px] sm:text-[52px] leading-none font-extrabold tracking-tight tabular-nums ${t.text}`}>{h.value}</div>
+                <div className="mt-2.5 text-[13px] font-extrabold text-ink leading-snug">{h.label}</div>
+                {h.sub && <div className="text-[11px] font-medium text-slatey mt-1">{h.sub}</div>}
+              </motion.div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* DESGLOSE */}
+      <Card className="p-5 sm:p-6">
+        <SectionHeader icon={BadgeCheck} title="De dónde salen esas 22 reservas" desc="El desglose, claro y honesto" />
+        <div className="grid sm:grid-cols-3 gap-3">
+          {R.desglose.map((d, i) => (
+            <div key={i} className="flex flex-col gap-1.5 p-4 rounded-2xl bg-ok/[0.05] border border-ok/15">
+              <CheckCircle2 size={18} className="text-ok shrink-0" />
+              <div className="text-[14px] font-extrabold text-ink leading-snug">{d.titulo}</div>
+              <div className="text-[11.5px] text-slatey font-medium leading-relaxed">{d.detalle}</div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 flex items-start gap-3 p-4 rounded-2xl bg-brand/[0.05] border border-brand/15">
+          <BadgeCheck size={20} className="text-brand shrink-0 mt-0.5" />
+          <div>
+            <div className="text-[13px] font-bold text-ink">
+              Piso 100% verificable: <span className="text-brand">{R.evidencia.monto}</span>
+            </div>
+            <p className="text-[11.5px] text-slatey font-medium mt-0.5 leading-relaxed">{R.evidencia.texto}</p>
+          </div>
+        </div>
+      </Card>
+
+      {/* ROI + REACTIVACIONES */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <Card className="p-5 sm:p-6 self-start">
+          <SectionHeader icon={DollarSign} title="Lo que cuesta vs. lo que rinde" desc="El costo del bot frente a lo que mueve" />
+          <div className="flex items-end gap-3 mb-3">
+            <div>
+              <div className="text-[11px] font-bold text-slatey uppercase tracking-wide">Costo del bot</div>
+              <div className="text-[40px] leading-none font-extrabold text-ink tracking-tight tabular-nums">{R.roi.costo}<span className="text-lg font-bold text-slatey">/mes</span></div>
+            </div>
+            <ArrowDownRight size={22} className="text-slatey mb-2 rotate-[-45deg]" />
+            <div>
+              <div className="text-[11px] font-bold text-ok uppercase tracking-wide">Atribuido a</div>
+              <div className="text-[34px] sm:text-[40px] leading-none font-extrabold text-ok tracking-tight tabular-nums whitespace-nowrap">~$13M</div>
+            </div>
+          </div>
+          <p className="text-[12px] text-slatey font-medium leading-relaxed">{R.roi.texto}</p>
+        </Card>
+
+        <Card className="p-5 sm:p-6 self-start">
+          <SectionHeader icon={RotateCcw} title="Clientes que volvieron" desc="Martina también despierta a los dormidos" />
+          <div className="flex items-baseline gap-2">
+            <span className="text-[52px] leading-none font-extrabold text-brand tracking-tight tabular-nums">{R.reactivaciones.cant}</span>
+            <span className="text-xl font-extrabold text-slatey">de {R.reactivaciones.base}</span>
+            <Badge tone="brand">{R.reactivaciones.pct}%</Badge>
+          </div>
+          <p className="text-[12px] text-slatey font-medium leading-relaxed mt-3">{R.reactivaciones.texto}</p>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────── OPORTUNIDADES (las 3 fugas, como plata recuperable) ───────────── */
+const OP_ICON: Record<string, any> = { usersPause: UserPlus, handoff: Bell, calendar: CalendarClock };
+export function Oportunidades() {
+  return (
+    <div className="space-y-6">
+      {/* HERO */}
+      <Card className="p-6 sm:p-8 relative overflow-hidden">
+        <div className="absolute -right-12 -top-12 w-56 h-56 rounded-full brand-gradient opacity-[0.07] blur-2xl" />
+        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-brand mb-3 bg-brand/10 rounded-full px-3 py-1">
+          <Target size={12.5} /> Plata esperando
+        </div>
+        <h2 className="text-2xl sm:text-[28px] font-extrabold text-ink-gradient tracking-tight mb-1.5">Oportunidades para crecer</h2>
+        <p className="text-sm text-slatey leading-relaxed max-w-3xl font-medium">
+          Martina ya está generando reservas. Acá hay tres lugares donde, con ajustes chicos, queda
+          todavía más plata por capturar. No son problemas: son oportunidades que ya están a mano.
+        </p>
+      </Card>
+
+      {/* 3 TARJETAS */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {FUGAS.map((op, i) => {
+          const I = OP_ICON[op.icon] || Target;
+          return (
+            <motion.div key={i} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+              className="card rounded-3xl p-5 sm:p-6 self-start flex flex-col gap-4">
+              {/* Encabezado: ícono + número de oportunidad */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="w-11 h-11 rounded-2xl grid place-items-center bg-brand/10 shrink-0">
+                  <I size={20} className="text-brand" />
+                </div>
+                <span className="text-[10.5px] font-bold text-slatey bg-ink/[0.05] rounded-full px-2.5 py-1">
+                  Oportunidad {i + 1}
+                </span>
+              </div>
+
+              {/* Título */}
+              <h3 className="text-[15.5px] font-extrabold text-ink leading-snug">{op.titulo}</h3>
+
+              {/* Qué pasa hoy */}
+              <p className="text-[12px] text-slatey font-medium leading-relaxed">{op.quePasa}</p>
+
+              {/* La oportunidad (destacada en verde) */}
+              <div className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-ok/[0.06] border border-ok/15">
+                <Sparkles size={16} className="text-ok shrink-0 mt-0.5" />
+                <p className="text-[12px] text-ink/80 font-semibold leading-relaxed">{op.oportunidad}</p>
+              </div>
+
+              {/* Estimado (chip, marcado como estimación si corresponde) */}
+              {op.estimado && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge tone="brand">{op.estimado}</Badge>
+                  {op.esEstimacion && <Badge tone="ink">estimación</Badge>}
+                </div>
+              )}
+
+              {/* La solución concreta */}
+              <div className="mt-auto pt-3 border-t border-slate-100">
+                <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-slatey uppercase tracking-wide mb-1">
+                  <ArrowRight size={12} className="text-brand" /> La solución
+                </div>
+                <p className="text-[12px] text-ink font-semibold leading-relaxed">{op.solucion}</p>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -351,67 +521,142 @@ export function Embudo({ cs }: P) {
 }
 
 /* ───────────── DERIVACIONES ───────────── */
-export function Derivaciones({ cs }: P) {
-  const der = derivaciones(cs);
-  const total = der.reduce((a, d) => a + d.cant, 0);
-  const colors = [C.warn, C.ok, C.info, C.brand, C.bad, C.soft, C.slate, '#14B8A6'];
-  const corr: Record<string, { t: string; l: string }> = { si: { t: 'ok', l: 'Correcta' }, parcial: { t: 'warn', l: 'Mejorable' }, no: { t: 'bad', l: 'Revisar' } };
-  const [open, setOpen] = useState<string | null>(der[0]?.razon ?? null);
+export function Derivaciones() {
+  const D = DERIVACIONES;
+  const tipos = [...D.tipos].sort((a, b) => b.cant - a.cant);
+  const maxTipo = Math.max(...tipos.map(t => t.cant), 1);
+  const momentos = [...D.porMomento].sort((a, b) => b.cant - a.cant);
+  const maxMom = Math.max(...momentos.map(m => m.cant), 1);
+  const totalHab = D.porHabitacion.master + D.porHabitacion.loft;
+  // Chart por día: derivaciones a lo largo de todo el período (dato real del dataset)
+  const evol = evolucionDias(conversations);
   return (
     <div className="space-y-6">
-      <SectionHeader icon={Share2} title="Derivaciones al equipo" desc={`${total} en total · tocá cada motivo para ver los clientes`} />
+      {/* HERO */}
+      <Card className="p-6 sm:p-8 relative overflow-hidden">
+        <div className="absolute -right-12 -top-12 w-56 h-56 rounded-full brand-gradient opacity-[0.07] blur-2xl" />
+        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-brand mb-3 bg-brand/10 rounded-full px-3 py-1">
+          <Share2 size={12.5} /> Derivaciones
+        </div>
+        <h2 className="text-2xl sm:text-[28px] font-extrabold text-ink-gradient tracking-tight mb-1.5">Cuándo Martina pasa la posta</h2>
+        <p className="text-sm text-slatey leading-relaxed max-w-3xl font-medium">
+          Derivar es parte sana del flujo: el bot resuelve casi todo solo y, cuando conviene una persona,
+          pasa la conversación lista. Muchas de esas derivaciones son clientes a punto de reservar.
+        </p>
+
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mt-6">
+          {[
+            { value: String(D.total), label: 'Derivaciones', sub: `${D.porcentaje} del total de conversaciones`, icon: Share2, tone: { text: 'text-brand', bg: 'bg-brand/10' } },
+            { value: String(D.cierresRecepcion), label: 'Cierres listos a recepción', sub: 'clientes a punto de reservar', icon: CheckCircle2, tone: { text: 'text-ok', bg: 'bg-ok/10' } },
+            { value: D.porcentaje, label: 'Del total de 986', sub: 'el resto lo resolvió el bot solo', icon: TrendingUp, tone: { text: 'text-info', bg: 'bg-info/10' } },
+          ].map((h, i) => {
+            const I = h.icon;
+            return (
+              <motion.div key={i} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                className="rounded-3xl bg-white/70 border border-slate-200/70 p-5 sm:p-6 hover:-translate-y-0.5 transition-transform">
+                <div className={`w-11 h-11 rounded-2xl grid place-items-center ${h.tone.bg}`}>
+                  <I size={20} className={h.tone.text} />
+                </div>
+                <div className={`mt-4 text-[40px] sm:text-[52px] leading-none font-extrabold tracking-tight tabular-nums ${h.tone.text}`}>{h.value}</div>
+                <div className="mt-2.5 text-[13px] font-extrabold text-ink leading-snug">{h.label}</div>
+                <div className="text-[11px] font-medium text-slatey mt-1">{h.sub}</div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* DESTACADO POSITIVO */}
+      <Card className="p-5 sm:p-6">
+        <div className="flex items-start gap-3.5 p-4 sm:p-5 rounded-2xl bg-ok/[0.06] border border-ok/15">
+          <div className="w-11 h-11 rounded-2xl grid place-items-center bg-ok/10 shrink-0">
+            <CheckCircle2 size={22} className="text-ok" />
+          </div>
+          <div>
+            <div className="text-[15px] font-extrabold text-ink leading-snug">
+              36 son cierres listos que pasan a recepción
+            </div>
+            <p className="text-[12.5px] text-slatey font-medium mt-1 leading-relaxed max-w-3xl">
+              El bot deriva en el momento justo: con el cliente caliente y a punto de reservar. No es una consulta
+              que se le escapó, es una venta servida en bandeja para que el equipo la cierre.
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      {/* DESGLOSE POR TIPO */}
+      <Card className="p-5 sm:p-6">
+        <SectionHeader icon={Tag} title="Por qué se deriva" desc="De mayor a menor, sobre las 167 derivaciones del período" />
+        <div className="space-y-4">
+          {tipos.map((t, i) => (
+            <div key={t.label}>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[13px] font-bold text-ink">{t.label}</span>
+                <span className="text-[14px] font-extrabold text-brand tabular-nums w-8 text-right">{t.cant}</span>
+              </div>
+              <PBar value={t.cant} max={maxTipo} tone={i === 0 ? 'ok' : 'brand'} delay={i * 0.05} />
+            </div>
+          ))}
+        </div>
+        <p className="text-[10.5px] text-slatey/80 font-medium mt-4 italic">
+          Clasificación automática del contenido de las conversaciones.
+        </p>
+      </Card>
+
+      {/* EN QUÉ MOMENTO + POR HABITACIÓN */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="p-5 self-start">
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie isAnimationActive={false} data={der.map(d => ({ name: d.label, value: d.cant }))} dataKey="value" nameKey="name" innerRadius={55} outerRadius={92} paddingAngle={3} stroke="none">
-                {der.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
-              </Pie>
-              <Tooltip content={<Tip />} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {der.map((d, i) => (
-              <div key={d.razon} className="flex items-center gap-1.5 text-[11px]">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: colors[i % colors.length] }} />
-                <b className="text-ink">{d.cant}</b><span className="text-slatey font-medium truncate">{d.label}</span>
+        <Card className="p-5 sm:p-6 self-start">
+          <SectionHeader icon={CalendarClock} title="En qué momento se derivan" desc="La etapa del flujo donde pasa la posta" />
+          <div className="space-y-4">
+            {momentos.map((m, i) => (
+              <div key={m.label}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[13px] font-bold text-ink">{m.label}</span>
+                  <span className="text-[14px] font-extrabold text-brand tabular-nums w-8 text-right">{m.cant}</span>
+                </div>
+                <PBar value={m.cant} max={maxMom} tone="info" delay={i * 0.05} />
               </div>
             ))}
           </div>
         </Card>
-        <div className="space-y-2.5">
-          {der.map((d, i) => (
-            <Card key={d.razon} delay={i * 0.04} className="overflow-hidden">
-              <button onClick={() => setOpen(open === d.razon ? null : d.razon)} className="w-full flex items-center justify-between p-4 hover:bg-white/50 transition">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: colors[i % colors.length] }} />
-                  <span className="text-[13px] font-extrabold text-ink">{d.label}</span>
-                  <Badge tone={corr[d.ok].t}>{corr[d.ok].l}</Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-extrabold text-brand tabular-nums">{d.cant}</span>
-                  <ChevronRight size={16} className={`text-slatey transition ${open === d.razon ? 'rotate-90' : ''}`} />
-                </div>
-              </button>
-              {open === d.razon && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="px-4 pb-3.5">
-                  <div className="space-y-1.5 border-t border-slate-100 pt-3">
-                    {d.convs.map(c => (
-                      <div key={c.id} className="flex items-center justify-between text-[12px] py-1">
-                        <div className="min-w-0 flex-1">
-                          <span className="font-semibold text-ink">{c.nombre}</span>
-                          <span className="text-slatey font-medium truncate"> · {c.primerMsg || 's/ mensaje'}</span>
-                        </div>
-                        <ChatLink id={c.id} />
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </Card>
-          ))}
-        </div>
+
+        <Card className="p-5 sm:p-6 self-start">
+          <SectionHeader icon={BedDouble} title="Por habitación" desc="Qué tipo de cuarto consultaban al derivar" />
+          <div className="space-y-5 mt-1">
+            <div>
+              <div className="flex items-baseline justify-between mb-1.5">
+                <span className="text-[13px] font-bold text-ink">Master Suite</span>
+                <span className="text-[28px] leading-none font-extrabold text-brand tabular-nums">{D.porHabitacion.master}</span>
+              </div>
+              <PBar value={D.porHabitacion.master} max={totalHab} tone="brand" />
+            </div>
+            <div>
+              <div className="flex items-baseline justify-between mb-1.5">
+                <span className="text-[13px] font-bold text-ink">Loft de Montaña</span>
+                <span className="text-[28px] leading-none font-extrabold text-info tabular-nums">{D.porHabitacion.loft}</span>
+              </div>
+              <PBar value={D.porHabitacion.loft} max={totalHab} tone="info" />
+            </div>
+          </div>
+        </Card>
       </div>
+
+      {/* DERIVACIONES POR DÍA (dato real del dataset) */}
+      <Card className="p-5 sm:p-6">
+        <SectionHeader icon={CalendarDays} title="Derivaciones por día" desc="Cómo se repartieron a lo largo del período" />
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={evol} margin={{ top: 18, right: 8, left: -22, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F7" vertical={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 11, fill: C.slate, fontWeight: 700 }} />
+            <YAxis tick={{ fontSize: 11, fill: C.slate }} allowDecimals={false} />
+            <Tooltip content={<Tip />} cursor={{ fill: 'rgba(99,102,241,0.06)' }} />
+            <Bar isAnimationActive={false} dataKey="derivadas" name="Derivadas" radius={[7, 7, 0, 0]} fill={C.brand} maxBarSize={54}>
+              <LabelList dataKey="derivadas" position="top" style={{ fontSize: 11, fontWeight: 800, fill: C.ink }} />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
     </div>
   );
 }
@@ -517,6 +762,15 @@ export function Calidad({ nar }: P) {
                 <I size={20} className={m.tone === 'ok' ? 'text-ok' : m.tone === 'warn' ? 'text-warn' : 'text-bad'} />
               </div>
               {m.nota && <p className="text-[11px] text-slatey font-medium mt-2 leading-relaxed border-t border-slate-100 pt-2">{m.nota}</p>}
+              {m.benchmark && (
+                <div className="mt-2 flex items-start gap-2 p-2.5 rounded-xl bg-brand/[0.05] border border-brand/12">
+                  <TrendingUp size={13} className="text-brand shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-[9.5px] font-bold text-brand uppercase tracking-wide block mb-0.5">Vs. la industria</span>
+                    <p className="text-[11px] text-slatey font-medium leading-relaxed">{m.benchmark}</p>
+                  </div>
+                </div>
+              )}
             </Card>
           );
         })}
@@ -652,7 +906,8 @@ export function Bitacora({ nar }: P) {
 }
 
 export const SECTIONS: Record<string, (p: P) => JSX.Element> = {
-  resumen: Resumen, evolucion: Evolucion, casos: Casos, actividad: Actividad, embudo: Embudo, derivaciones: Derivaciones,
+  resumen: Resumen, resultados: Resultados, evolucion: Evolucion, casos: Casos, actividad: Actividad, embudo: Embudo,
+  oportunidades: Oportunidades, derivaciones: Derivaciones,
   conversaciones: Conversaciones, calidad: Calidad, errores: Errores, acciones: Acciones, bitacora: Bitacora,
   debug: () => <DebugSection />,
 };
